@@ -1,0 +1,51 @@
+/* @flow */
+
+import Kefir from 'kefir';
+
+import type { Emitter, Property, Stream } from 'kefir';
+import type { Lens } from 'nanoscope';
+
+export type Handler<AppState, Event> = (s: AppState, e: Event) => AppState
+export type Subscriber<AppState, View> = Lens<AppState, View> | (s: AppState) => View
+export type Subscribe<AppState> = (<View>(sub: Subscriber<AppState, View>) => View)
+
+export class App<AppState> {
+  state: Property<AppState>;
+  _input: Stream<Object>;
+  _emitter: Emitter<Object>;
+  _handlers: [Class<any>, Handler<AppState, any>][];
+
+  constructor(initialState: AppState) {
+    var input = Kefir.stream(emitter => {
+      this._emitter = emitter
+      return () => undefined
+    })
+    var output = input.scan(this._handleEvent.bind(this), initialState)
+    this.state = output
+    this._input = input
+    this._handlers = []
+  }
+
+  // TODO: `klass` should be a constructor that produces values of type `Event`.
+  // But Flow does not yet provide a type annotation for this.
+  on<Event: Object>(klass: Class<Event>, handler: Handler<AppState, Event>) {
+    this._handlers.push([klass, handler])
+  }
+
+  emit<Event: Object>(event: Event) {
+    this._emitter.emit(event);
+  }
+
+  _handleEvent(prevState: AppState, event: Object): AppState {
+    var handlers = this._handlers
+    .filter(([klass, _]) => event instanceof klass)
+    .map(([_, handler]) => handler)
+
+    var nextState = handlers.reduce(
+      (state, handler) => handler(state, event),
+      prevState
+    )
+    return nextState;
+  }
+
+}

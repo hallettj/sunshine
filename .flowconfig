@@ -1,0 +1,9 @@
+[ignore]
+.*/node_modules/flow-bin/.*
+
+[include]
+
+[libs]
+./lib/
+
+[options]

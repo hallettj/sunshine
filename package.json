@@ -1,0 +1,18 @@
+{
+  "name": "sunshine",
+  "version": "0.1.0",
+  "description": "Framework for client-side apps, based on Flux and functional reactive programming",
+  "repository": {
+    "type": "git",
+    "url": "TODO"
+  },
+  "main": "sunshine.js",
+  "dependencies": {
+    "kefir": "^2.1.0",
+    "nanoscope": "^2.1.5"
+  },
+  "devDependencies": {
+    "babel-core": "^5.2.6",
+    "flow-bin": "^0.10.0"
+  }
+}
