@@ -19,7 +19,7 @@ It has included support for React.
 In the future support may be added for other frameworks,
 such as [Mercury's][Mercury] or [Mithril's][Mithril] virtual DOM implementations.
 
-[Flux]: TODO
+[Flux]: https://facebook.github.io/flux/
 [Mercury]: https://github.com/Raynos/mercury
 [Mithril]: https://lhorie.github.io/mithril/
 
@@ -72,7 +72,7 @@ A pre-compiled version of Sunshine may be made available in the future.
 [Flow][] is recommended, but not required.
 
 [Babel]: https://babeljs.io/
-[Flow]: TODO
+[Flow]: http://flowtype.org/
 
 
 What is Sunshine
