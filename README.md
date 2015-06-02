@@ -181,7 +181,7 @@ And the number of todos returned should be limited based on the component's
 
     var activeTodos: Lens<AppState,Todo[]> = todosLens.filter(todo => !todo.completed)
 
-    function todosPage(pageSize: number) {
+    function todosPage(pageSize: number): Lens<AppState,Todo[]> {
         return activeTodos.slice(`:${pageSize}`)
     }
 
@@ -198,7 +198,7 @@ uncompleted todos.
 further reducing the derived view of `activeTodos` down to just one page of
 active todos.
 
-The ``:${pageSize}`` construct is an [ES6 template string][].
+The `` `:${pageSize}` `` construct is an [ES6 template string][].
 
 [ES6 template string]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/template_strings
 
@@ -211,9 +211,15 @@ Here are some examples of how these lenses can be used:
     // `newState` is a new object with the new todos list. `initialState` is not modified.
     var newState = todosLens.set(initialState, [{ title: 'add todo', completed: true }])
 
+    // modifying todos without replacing the whole list
+    var newnewState = todosLens.map(initialState, todos => todos.concat({
+        title: 'append a todo',
+        completed: true,
+    }))
+
     // reading a page of active todos
     var pageLens = todosPage(5)
-    var page = pageLens.get(newState)
+    var page = pageLens.get(newnewState)
 
 There is more information in the [nanoscope documentation][nanoscope].
 TODO: Link to docs for v1.0 lenses.
@@ -309,7 +315,7 @@ title property.
 
 You may have multiple handlers registered for the same event type.
 In this case,
-each will get the update state from the previous handler as input.
+each will get the updated state from the previous handler as input.
 Components will not re-render until all handlers have run.
 
 If you do not return anything from an event handler,
