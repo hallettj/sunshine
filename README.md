@@ -1,5 +1,4 @@
-SunshineJS
-==========
+![SunshineJS](https://cloud.githubusercontent.com/assets/9622/7943559/11a32706-091a-11e5-8d6a-ac90fd9f9923.jpg)
 
 Experimental framework for client-side apps, based on Flux and functional reactive programming
 
