@@ -27,10 +27,12 @@ The goals of Sunshine are:
 
 - unidirectional data flow, _à la_ Flux
 - State should stay in one place, and it should be immutable.
-- pure(-ish) JavaScript
+- pure(-ish)[*][pure-ish] JavaScript
 - type safety with Flow
 - isomorphism (the same code can be used client-side and server-side)
 - small size (don't want to have to maintain a big pile o' code)
+
+[pure-ish]: #user-content-questions-that-someone-might-one-day-ask
 
 Sunshine shamelessly takes ideas from [re-frame][].
 Re-frame keeps all app state in one immutable data structure,
