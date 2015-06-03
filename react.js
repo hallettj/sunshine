@@ -7,7 +7,7 @@ import type { Property, Stream } from 'kefir';
 import type { Lens } from 'nanoscope';
 import type { Subscribe, Subscriber } from './sunshine'
 
-export var App = Sunshine.App
+export { App } from './sunshine'
 export type Handler<AppState, Event> = (s: AppState, e: Event) => AppState
 export type Subscriber<AppState, View> = Lens<AppState, View> | (s: AppState) => View
 export type Subscribe<AppState> = (<View>(sub: Subscriber<AppState, View>) => View)
@@ -27,11 +27,11 @@ export class Component<DefProps,Props,ComponentState,AppState> extends React.Com
     }
   }
 
-  _app(): App<AppState> {
+  _app(): Sunshine.App<AppState> {
     return this.context.app
   }
 
-  constructor(props: Props, context: { app: App<AppState> }) {
+  constructor(props: Props, context: { app: Sunshine.App<AppState> }) {
     super(props, context)
 
     // Set initial state
@@ -92,7 +92,7 @@ function deref<T>(prop: Property<T>): T {
 }
 
 type ContextProps<AppState> = {
-  app: App<AppState>;
+  app: Sunshine.App<AppState>;
   children: ReactElement[];
 }
 
@@ -103,7 +103,7 @@ export class Context<AppState> extends React.Component<{},ContextProps<AppState>
     }
   }
 
-  getChildContext(): { app: App<AppState> } {
+  getChildContext(): { app: Sunshine.App<AppState> } {
     return { app: this.props.app }
   }
 
