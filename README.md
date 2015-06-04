@@ -7,7 +7,7 @@ Why Sunshine
 ------------
 
 Sunshine is the control layer (for lack of a better word) of your MVWTF app.
-It is essentially an implementation of [Flux][] with a particularly functionl angle.
+It is essentially an implementation of [Flux][] with a particularly functional angle.
 Sunshine provides an event system to listen for user intentions,
 server-side state changes, etc.;
 and an event handling system that is used to update application state using
@@ -25,27 +25,27 @@ such as [Mercury's][Mercury] or [Mithril's][Mithril] virtual DOM implementations
 The goals of Sunshine are:
 
 - unidirectional data flow, _à la_ Flux
+- type safety with Flow
 - State should stay in one place, and it should be immutable.
 - pure(-ish)[*][pure-ish] JavaScript
-- type safety with Flow
 - isomorphism (the same code can be used client-side and server-side)
 - small size (don't want to have to maintain a big pile o' code)
 
 [pure-ish]: #user-content-questions-that-someone-might-one-day-ask
 
 Sunshine shamelessly takes ideas from [re-frame][].
-Re-frame keeps all app state in one immutable data structure,
-and encourages implementers to think of it as an in-memory database.
+Re-frame keeps all app state in one immutable data structure.
+State is computed as on ongoing fold over an event stream.
+Re-frame encourages implementers to think of state as an in-memory database.
 Views go through a query layer to read state,
 which decouples views from implementation details of app state.
-State is updated by event handlers.
 There is a lot of explanation on why this works well in
-[re-frames excellent readme][re-frame readme].
+[re-frame's excellent readme][re-frame readme].
 
 Sunshine does basically the same thing.
 But Sunshine brings in a new idea for the query and update layers:
 lenses act as symmetric getters and setters,
-which decouples both the view and event handlers from state implementation.
+which decouple both the view and event handlers from state implementation.
 Apart from lenses,
 the reasons for creating a new framework are to build in type-safety,
 and to use pure(-ish) JavaScript.
@@ -107,7 +107,7 @@ see the example todo app under [examples/todomvc/][example].
 
 [example]: https://github.com/hallettj/sunshine/tree/master/examples/todomvc
 
-Everything in Sunshine revolves around the `App` class,
+Everything in Sunshine revolves around the `Sunshine.App` class,
 and around app state.
 The first thing that you will do is to define an initial state.
 Here is a very simple example:
@@ -158,16 +158,34 @@ To set that up,
 render your top-level component inside of a `Sunshine.Context` component.
 
     React.render(
-      <Sunshine.Context app={app}>
-        <TodoApp pageSize={10} />
-      </Sunshine.Context>,
-      document.getElementById('todoapp')
+        <Sunshine.Context app={app}>
+            <TodoApp pageSize={10} />
+        </Sunshine.Context>,
+        document.getElementById('todoapp')
     )
 
-TODO: explain how to make `Sunshine.Context` work with react-router.
+If you are using [react-router][],
+wrap `Sunshine.Context` around your route handler inside of the `Router.run()` callback.
 
-This component uses `this.state`,
-but we have not put anything there yet.
+    var routes = (
+        <Route name="app" path="/" handler={TodoApp}>
+            // whatever
+        </Route>
+    )
+
+    Router.run(routes, Handler => {
+        React.render(
+            <Sunshine.Context app={app}>
+                <Handler/>
+            </Sunshine.Context>,
+            document.getElementById('todoapp')
+        )
+    })
+
+[react-router]: https://github.com/rackt/react-router/
+
+`TodoApp` uses `this.state`,
+but we have not put anything in its state yet.
 We will need to connect the component to app state.
 But first we need to write a lens that the component can use to query state.
 
@@ -247,7 +265,7 @@ When your component first renders,
 it will have an initial state based on the `initialState` used to construct
 your `Sunshine.App` instance.
 Whenever the app state updates,
-the component's state will update automatically using the supplied lenses,
+Sunshine will push the updated state to your component,
 and the component will re-render.
 
 To close the loop,
@@ -283,7 +301,7 @@ To emit events from somewhere other than a React component,
 you can call `app.emit()`.
 
 An event handler can grab that event and update app state accordingly.
-A handler is just a function that takes an event and the current app state,
+A handler is just a function that takes the current app state and an event,
 and returns an updated app state.
 To register a handler,
 you need to specify the type of event that it handles.
@@ -313,9 +331,16 @@ The second argument to the event handler callback is an event object -
 in this case an instance of `AddTodoEvent`.
 The argument expression, `{ title }` destructures that object to pull out the
 title property.
+Without destructuring, the handler would like like this:
+
+    app.on(AddTodoEvent, (state, event) => {
+        var title = event.title
+        // ...
+    })
 
 You may have multiple handlers registered for the same event type.
 In this case,
+the handlers will run one at a time;
 each will get the updated state from the previous handler as input.
 Components will not re-render until all handlers have run.
 
@@ -361,7 +386,6 @@ For example:
         return todoLens.map(state, todos => todos.concat(todo))
     })
 
-
 And that is Sunshine.
 This documentation is just a draft;
 if you still have questions,
@@ -384,8 +408,8 @@ Opinions may vary.
 ### How does Sunshine relate to Relay?
 
 Compared to [Relay][],
-Sunshine is more focused, and smaller
-(presumably - I have not seen any source for Relay).
+Sunshine is more focused, less opinionated, and smaller.
+(I presume it is smaller - I have not seen any source for Relay.)
 Sunshine is intended to do one thing: manage client state.
 
 Relay is a client and server architecture that unifies client rendering with
