@@ -92,7 +92,7 @@ At a hand-wavy level, this is what a Sunshine app looks like:
              |       +------------------+                     |
              |       |                  |                     | getSubscribers()
              +------>|   event stream   |                     |
-                     |                  |                     |                                  
+                     |                  |                     |
                      +------------------+                     |
                             ^   ^                             |
     +--------------+        |   |          +---------------+  |
