@@ -240,10 +240,17 @@ Here are some examples of how these lenses can be used:
     var pageLens = todosPage(5)
     var page = pageLens.get(newnewState)
 
-There is more information in the [nanoscope documentation][nanoscope].
-TODO: Link to docs for v1.0 lenses.
+
+There is more information in the nanoscope documentation.
+The documentation is split up at the moment.
+Documentation for methods on lenses is available on the [official site][nanoscope].
+Documentation for creating lenses is in the nanoscope repository,
+in [out/index.html][nanoscope-docs].
+The best way to read those docs is to clone the repository,
+and open `index.html` locally.
 
 [nanoscope]: http://kovach.me/nanoscope/
+[nanoscope-docs]: https://github.com/5outh/nanoscope/blob/master/out/index.html
 
 React components are connected to app state by implementing a method called
 `getSubscribers`.
@@ -436,3 +443,31 @@ TODO: explain this
 
 TODO: discuss tradeoffs, suggest Immutable.js
 TODO: lens suport for Immutable.js
+
+### Can I use `setState()` directly?
+
+Yes, with the caveat that you should not use Sunshine-managed state and
+manually-managed state in the same component.
+
+Sunshine components that implement `getSubscribers()` have their state managed by Sunshine.
+That means that anything you set with `setState()` will be overwritten.
+It is not a good idea to call `setState()` in one of these components.
+
+Sunshine components that do not implement `getSubscribers()` can emit events,
+but do not have their state managed by Sunshine.
+It is fine to use `setState()` in these components -
+or to use some other framework that manages state in a different way.
+
+Regular React components
+(instances of `React.Component` as opposed to `Sunshine.Component`)
+are also not managed by Sunshine.
+Calling `setState()` in these components is also fine.
+It is likely that you will want to use components from libraries that have
+their own private state -
+do so without worries.
+
+### What is the relation between `Sunshine.Component` and `React.Component`?
+
+`Sunshine.Component` is a subclass of `React.Component`.
+It just adds a little extra behavior.
+All of the React stuff that you are used to is also there.
