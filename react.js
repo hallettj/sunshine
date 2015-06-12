@@ -21,14 +21,6 @@ export class Component<DefProps,Props,ComponentState> extends React.Component<De
   _changes:        ?Stream<AppStateStandin>;
   _onStateChange:  ?((_: AppStateStandin) => void);
 
-  // In development mode, React will not provide context values to a component
-  // unless those values are declared with `contextTypes`.
-  static get contextTypes() {
-    return {
-      app: React.PropTypes.instanceOf(Sunshine.App).isRequired
-    }
-  }
-
   _app(): Sunshine.App<AppStateStandin> {
     return this.context.app
   }
@@ -73,6 +65,12 @@ export class Component<DefProps,Props,ComponentState> extends React.Component<De
   }
 }
 
+// In development mode, React will not provide context values to a component
+// unless those values are declared with `contextTypes`.
+Component.contextTypes = {
+  app: React.PropTypes.instanceOf(Sunshine.App).isRequired
+}
+
 function subscribe<S>(state: S): Subscribe<S> {
   return function subscribe_<V>(sub: Subscriber<*,V>): V {
     if (typeof sub === 'function') {
@@ -99,12 +97,6 @@ type ContextProps<AppState> = {
 }
 
 export class Context<AppState> extends React.Component<{},ContextProps<AppState>,{}> {
-  static get childContextTypes() {
-    return {
-      app: React.PropTypes.instanceOf(Sunshine.App).isRequired
-    }
-  }
-
   getChildContext(): { app: Sunshine.App<AppState> } {
     return { app: this.props.app }
   }
@@ -112,4 +104,8 @@ export class Context<AppState> extends React.Component<{},ContextProps<AppState>
   render(): ReactElement {
     return this.props.children
   }
+}
+
+Context.childContextTypes = {
+  app: React.PropTypes.instanceOf(Sunshine.App).isRequired
 }
