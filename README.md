@@ -136,7 +136,10 @@ app state, and for emitting events.
 
 ```js
 type DefaultProps = {}
-type Props = { pageSize: number }
+type Props = {
+    app: Sunshine.App<AppState>,
+    pageSize: number,
+}
 type ComponentState = { todos: Todo[] }
 
 class TodoApp extends Sunshine.Component<DefaultProps,Props,ComponentState> {
@@ -160,34 +163,41 @@ class TodoApp extends Sunshine.Component<DefaultProps,Props,ComponentState> {
 ```
 
 Sunshine components need to have a reference to a `Sunshine.App` instance.
-To set that up,
-render your top-level component inside of a `Sunshine.Context` component.
+To make that happen,
+pass the instance to your top-level component using the `app` prop.
+(Note that there is an `app` property in the `Props` type for `TodoApp`.)
 
 ```js
 React.render(
-    <Sunshine.Context app={app}>
-        <TodoApp pageSize={10} />
-    </Sunshine.Context>,
+    <TodoApp pageSize={10} app={app} />
     document.getElementById('todoapp')
 )
 ```
 
+There is no need to pass an `app` prop to child components -
+child components and their descendents will get the reference from your
+top-level component automatically.
+
 If you are using [react-router][],
-wrap `Sunshine.Context` around your route handler inside of the `Router.run()` callback.
+you may need to create a wrapper component to set up the `app` prop
+(and any-other props you want to provide to your top-level component).
+
+    class TodoAppWrapper extends Sunshine.Component<{},{},{}> {
+        render(): React.Element {
+            return (
+              <TodoApp pageSize={10} app={app}/>
+            )
+        }
+    }
 
     var routes = (
-        <Route name="app" path="/" handler={TodoApp}>
+        <Route name="app" path="/" handler={TodoAppWrapper}>
             // whatever
         </Route>
     )
 
-    Router.run(routes, Handler => {
-        React.render(
-            <Sunshine.Context app={app}>
-                <Handler/>
-            </Sunshine.Context>,
-            document.getElementById('todoapp')
-        )
+    Router.run(routes, Router.HashLocation, Root => {
+        React.render(<Root/>, document.getElementById('todoapp'))
     })
 
 [react-router]: https://github.com/rackt/react-router/

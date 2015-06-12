@@ -13,17 +13,16 @@ export type Subscriber<AppState, View> = Lens<AppState, View> | (s: AppState) =>
 export type Subscribe<AppState> = (<View>(sub: Subscriber<AppState, View>) => View)
 
 type AppStateStandin = Object
+type Context<AppState> = {
+  _sunshineApp: Sunshine.App<AppState>
+}
 
 export class Component<DefProps,Props,ComponentState> extends React.Component<DefProps,Props,ComponentState> {
-  context:         ContextProps<AppStateStandin>;
+  context:         Context<AppStateStandin>;
   state:           ComponentState;
   _hasSubscribers: boolean;
   _changes:        ?Stream<AppStateStandin>;
   _onStateChange:  ?((_: AppStateStandin) => void);
-
-  _app(): Sunshine.App<AppStateStandin> {
-    return this.context.app
-  }
 
   constructor(props: Props, context: { app: Sunshine.App<AppStateStandin> }) {
     super(props, context)
@@ -42,6 +41,14 @@ export class Component<DefProps,Props,ComponentState> extends React.Component<De
 
   emit<Event: Object>(event: Event) {
     this._app().emit(event)
+  }
+
+  _app(): Sunshine.App<AppStateStandin> {
+    return this.context._sunshineApp || this.props.app
+  }
+
+  getChildContext(): Context<AppStateStandin> {
+    return { _sunshineApp: this._app() }
   }
 
   componentDidMount() {
@@ -71,6 +78,10 @@ Component.contextTypes = {
   app: React.PropTypes.instanceOf(Sunshine.App).isRequired
 }
 
+Component.childContextTypes = {
+  app: React.PropTypes.instanceOf(Sunshine.App).isRequired
+}
+
 function subscribe<S>(state: S): Subscribe<S> {
   return function subscribe_<V>(sub: Subscriber<*,V>): V {
     if (typeof sub === 'function') {
@@ -89,23 +100,4 @@ function deref<T>(prop: Property<T>): T {
     prop.offValue(get)
   })
   return value
-}
-
-type ContextProps<AppState> = {
-  app: Sunshine.App<AppState>;
-  children: ReactElement;
-}
-
-export class Context<AppState> extends React.Component<{},ContextProps<AppState>,{}> {
-  getChildContext(): { app: Sunshine.App<AppState> } {
-    return { app: this.props.app }
-  }
-
-  render(): ReactElement {
-    return this.props.children
-  }
-}
-
-Context.childContextTypes = {
-  app: React.PropTypes.instanceOf(Sunshine.App).isRequired
 }
