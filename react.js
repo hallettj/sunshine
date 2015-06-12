@@ -12,26 +12,28 @@ export type Handler<AppState, Event> = (s: AppState, e: Event) => AppState
 export type Subscriber<AppState, View> = Lens<AppState, View> | (s: AppState) => View
 export type Subscribe<AppState> = (<View>(sub: Subscriber<AppState, View>) => View)
 
-export class Component<DefProps,Props,ComponentState,AppState> extends React.Component<DefProps,Props,ComponentState> {
-  context:         ContextProps<AppState>;
+type AppStateStandin = Object
+
+export class Component<DefProps,Props,ComponentState> extends React.Component<DefProps,Props,ComponentState> {
+  context:         ContextProps<AppStateStandin>;
   state:           ComponentState;
   _hasSubscribers: boolean;
-  _changes:        ?Stream<AppState>;
-  _onStateChange:  ?((_: AppState) => void);
+  _changes:        ?Stream<AppStateStandin>;
+  _onStateChange:  ?((_: AppStateStandin) => void);
 
   // In development mode, React will not provide context values to a component
   // unless those values are declared with `contextTypes`.
   static get contextTypes() {
     return {
-      app: React.PropTypes.instanceOf(App).isRequired
+      app: React.PropTypes.instanceOf(Sunshine.App).isRequired
     }
   }
 
-  _app(): Sunshine.App<AppState> {
+  _app(): Sunshine.App<AppStateStandin> {
     return this.context.app
   }
 
-  constructor(props: Props, context: { app: Sunshine.App<AppState> }) {
+  constructor(props: Props, context: { app: Sunshine.App<AppStateStandin> }) {
     super(props, context)
 
     // Set initial state
@@ -42,7 +44,7 @@ export class Component<DefProps,Props,ComponentState,AppState> extends React.Com
   }
 
   // Override `getSubscribers` to access app state.
-  getSubscribers(subscribe: Subscribe<AppState>): ?ComponentState {
+  getSubscribers(subscribe: Subscribe<AppStateStandin>): ?ComponentState {
     return null
   }
 
@@ -72,7 +74,7 @@ export class Component<DefProps,Props,ComponentState,AppState> extends React.Com
 }
 
 function subscribe<S>(state: S): Subscribe<S> {
-  return function subscribe_<V>(sub: Subscriber<*,V>): V {
+  return function subscribe_<V>(sub: Subscriber<AppStateStandin,V>): V {
     if (typeof sub === 'function') {
       return sub(state)
     }
@@ -93,13 +95,13 @@ function deref<T>(prop: Property<T>): T {
 
 type ContextProps<AppState> = {
   app: Sunshine.App<AppState>;
-  children: ReactElement[];
+  children: ReactElement;
 }
 
 export class Context<AppState> extends React.Component<{},ContextProps<AppState>,{}> {
   static get childContextTypes() {
     return {
-      app: React.PropTypes.instanceOf(App).isRequired
+      app: React.PropTypes.instanceOf(Sunshine.App).isRequired
     }
   }
 
@@ -108,6 +110,6 @@ export class Context<AppState> extends React.Component<{},ContextProps<AppState>
   }
 
   render(): ReactElement {
-    return this.props.children[0]
+    return this.props.children
   }
 }
