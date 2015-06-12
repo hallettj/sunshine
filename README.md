@@ -112,57 +112,65 @@ and around app state.
 The first thing that you will do is to define an initial state.
 Here is a very simple example:
 
-    type AppState = { todos: Todo[] }
-    type Todo = {
-        title: string,
-        completed: boolean,
-    }
+```js
+type AppState = { todos: Todo[] }
+type Todo = {
+    title: string,
+    completed: boolean,
+}
 
-    var initialState: AppState = { todos: [] }
+var initialState: AppState = { todos: [] }
+```
 
 And the next thing you will do is create an app:
 
-    import * as Sunshine from 'sunshine/react'
+```js
+import * as Sunshine from 'sunshine/react'
 
-    var app = new Sunshine.App(initialState)
+var app = new Sunshine.App(initialState)
+```
 
 Normally to create React components you create subclasses of `React.Component`.
 Sunshine has its own component class that provides methods for subscribing to
 app state, and for emitting events.
 
-    type DefaultProps = {}
-    type Props = { pageSize: number }
-    type ComponentState = { todos: Todo[] }
+```js
+type DefaultProps = {}
+type Props = { pageSize: number }
+type ComponentState = { todos: Todo[] }
 
-    class TodoApp extends Sunshine.Component<DefaultProps,Props,ComponentState> {
-        render(): React.Element {
-            var todos = this.state.todos.map(todo => (
-                <li>{todo.title}<li>
-            ))
-            return (
-                <div>
-                    <form onSubmit={this.addTodo.bind(this)}>
-                        <input type="text" ref="title"/>
-                        <input type="submit" value="create todo"/>
-                    </form>
-                    <ul>
-                        {todos}
-                    </ul>
-                <div>
-            )
-        }
+class TodoApp extends Sunshine.Component<DefaultProps,Props,ComponentState> {
+    render(): React.Element {
+        var todos = this.state.todos.map(todo => (
+            <li>{todo.title}<li>
+        ))
+        return (
+            <div>
+                <form onSubmit={this.addTodo.bind(this)}>
+                    <input type="text" ref="title"/>
+                    <input type="submit" value="create todo"/>
+                </form>
+                <ul>
+                    {todos}
+                </ul>
+            <div>
+        )
     }
+}
+```
 
 Sunshine components need to have a reference to a `Sunshine.App` instance.
 To set that up,
 render your top-level component inside of a `Sunshine.Context` component.
 
-    React.render(
-        <Sunshine.Context app={app}>
-            <TodoApp pageSize={10} />
-        </Sunshine.Context>,
-        document.getElementById('todoapp')
-    )
+```js
+React.render(
+    <Sunshine.Context app={app}>
+        <TodoApp pageSize={10} />
+    </Sunshine.Context>,
+    document.getElementById('todoapp')
+)
+```
 
 If you are using [react-router][],
 wrap `Sunshine.Context` around your route handler inside of the `Router.run()` callback.
@@ -194,15 +202,17 @@ But let's say that the component should only display uncompleted todos.
 And the number of todos returned should be limited based on the component's
 `pageSize` prop.
 
-    import nanoscope from 'nanoscope'
+```js
+import nanoscope from 'nanoscope'
 
-    var todosLens: Lens<AppState,Todo[]> = new nanoscope.PathLens('todos')
+var todosLens: Lens<AppState,Todo[]> = new nanoscope.PathLens('todos')
 
-    var activeTodos: Lens<AppState,Todo[]> = todosLens.filter(todo => !todo.completed)
+var activeTodos: Lens<AppState,Todo[]> = todosLens.filter(todo => !todo.completed)
 
-    function todosPage(pageSize: number): Lens<AppState,Todo[]> {
-        return activeTodos.slice(`:${pageSize}`)
-    }
+function todosPage(pageSize: number): Lens<AppState,Todo[]> {
+    return activeTodos.slice(`:${pageSize}`)
+}
+```
 
 A lens is used to focus in on a specific piece of a (possibly large) data
 structure.
@@ -223,23 +233,24 @@ The `` `:${pageSize}` `` construct is an [ES6 template string][].
 
 Here are some examples of how these lenses can be used:
 
-    // reading todos
-    var todos = todosLens.get(initialState)
+```js
+// reading todos
+var todos = todosLens.get(initialState)
 
-    // setting todos;
-    // `newState` is a new object with the new todos list. `initialState` is not modified.
-    var newState = todosLens.set(initialState, [{ title: 'add todo', completed: true }])
+// setting todos;
+// `newState` is a new object with the new todos list. `initialState` is not modified.
+var newState = todosLens.set(initialState, [{ title: 'add todo', completed: true }])
 
-    // modifying todos without replacing the whole list
-    var newnewState = todosLens.map(initialState, todos => todos.concat({
-        title: 'append a todo',
-        completed: true,
-    }))
+// modifying todos without replacing the whole list
+var newnewState = todosLens.map(initialState, todos => todos.concat({
+    title: 'append a todo',
+    completed: true,
+}))
 
-    // reading a page of active todos
-    var pageLens = todosPage(5)
-    var page = pageLens.get(newnewState)
-
+// reading a page of active todos
+var pageLens = todosPage(5)
+var page = pageLens.get(newnewState)
+```
 
 There is more information in the nanoscope documentation.
 The documentation is split up at the moment.
@@ -257,16 +268,18 @@ React components are connected to app state by implementing a method called
 Use lenses to subscribe to just the little bits of state that your component
 needs access to.
 
-    class TodoApp extends Sunshine.Component<DefaultProps,Props,ComponentState> {
+```js
+class TodoApp extends Sunshine.Component<DefaultProps,Props,ComponentState> {
 
-        getSubscribers(subscribe: Sunshine.Subscribe<AppState>): ComponentState {
-            return {
-                todos: subscribe(todosPage(this.props.pageSize))
-            }
+    getSubscribers(subscribe: Sunshine.Subscribe<AppState>): ComponentState {
+        return {
+            todos: subscribe(todosPage(this.props.pageSize))
         }
-
-        // render() is the same as before
     }
+
+    // render() is the same as before
+}
+```
 
 When your component first renders,
 it will have an initial state based on the `initialState` used to construct
@@ -279,30 +292,34 @@ To close the loop,
 components need to emit events.
 To emit events, we have to define event types.
 
-    class AddTodoEvent {
-        title: string;
-        constructor(title: string) {
-            this.title = title
-        }
+```js
+class AddTodoEvent {
+    title: string;
+    constructor(title: string) {
+        this.title = title
     }
+}
+```
 
 We already have on `onSubmit` handler on a form that calls `addTodo`.
 Let's implement that method.
 
-    import React from 'react'
+```js
+import React from 'react'
 
-    class TodoApp extends Sunshine.Component<DefaultProps,Props,ComponentState> {
+class TodoApp extends Sunshine.Component<DefaultProps,Props,ComponentState> {
 
-        // The rest of the class is the same as before.
+    // The rest of the class is the same as before.
 
-        addTodo(event: Event) {
-            event.preventDefault()
-            var input = React.findDOMNode(this.refs.title)
-            var title = input.value
-            this.emit(new AddTodoEvent(title))
-        }
-
+    addTodo(event: Event) {
+        event.preventDefault()
+        var input = React.findDOMNode(this.refs.title)
+        var title = input.value
+        this.emit(new AddTodoEvent(title))
     }
+
+}
+```
 
 To emit events from somewhere other than a React component,
 you can call `app.emit()`.
@@ -315,12 +332,14 @@ you need to specify the type of event that it handles.
 
 Remember how a lens can both read and update a data structure?
 
-    app.on(AddTodoEvent, (state, { title }) => {
-        return todosLens.map(state, todos => todos.concat({
-            title: title,
-            completed: false,
-        }))
-    })
+```js
+app.on(AddTodoEvent, (state, { title }) => {
+    return todosLens.map(state, todos => todos.concat({
+        title: title,
+        completed: false,
+    }))
+})
+```
 
 The `map()` method on a lens takes an update function.
 The function takes the existing value at the focused spot,
@@ -340,10 +359,12 @@ The argument expression, `{ title }` destructures that object to pull out the
 title property.
 Without destructuring, the handler would like like this:
 
-    app.on(AddTodoEvent, (state, event) => {
-        var title = event.title
-        // ...
-    })
+```js
+app.on(AddTodoEvent, (state, event) => {
+    var title = event.title
+    // ...
+})
+```
 
 You may have multiple handlers registered for the same event type.
 In this case,
@@ -360,38 +381,40 @@ The thing to do in those cases is to emit a second event when an async
 operation completes.
 For example:
 
-    class AddTodoWithAuthor {
-        title: string;
-        authorId: number;
-        constructor(title: string, authorId: number) {
-            this.title = title
-            this.authorId = authorId
-        }
+```js
+class AddTodoWithAuthor {
+    title: string;
+    authorId: number;
+    constructor(title: string, authorId: number) {
+        this.title = title
+        this.authorId = authorId
     }
+}
 
-    class AppendTodo {
-        todo: Todo
-        constructor(todo: Todo) {
-            this.todo = todo
-        }
+class AppendTodo {
+    todo: Todo
+    constructor(todo: Todo) {
+        this.todo = todo
     }
+}
 
-    app.on(AddTodoWithAuthor, (state, { title, authorId }) => {
-        fetch(`/users/${authorId}`).then(response => {
-            response.json().then(author => {
-                var todo = {
-                    title,
-                    author,
-                    completed: false,
-                }
-                app.emit(new AppendTodo(todo))
-            })
+app.on(AddTodoWithAuthor, (state, { title, authorId }) => {
+    fetch(`/users/${authorId}`).then(response => {
+        response.json().then(author => {
+            var todo = {
+                title,
+                author,
+                completed: false,
+            }
+            app.emit(new AppendTodo(todo))
         })
     })
+})
 
-    app.on(AppendTodo, (state, { todo }) => {
-        return todoLens.map(state, todos => todos.concat(todo))
-    })
+app.on(AppendTodo, (state, { todo }) => {
+    return todoLens.map(state, todos => todos.concat(todo))
+})
+```
 
 And that is Sunshine.
 This documentation is just a draft;
