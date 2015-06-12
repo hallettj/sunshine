@@ -142,7 +142,7 @@ type ComponentState = { todos: Todo[] }
 class TodoApp extends Sunshine.Component<DefaultProps,Props,ComponentState> {
     render(): React.Element {
         var todos = this.state.todos.map(todo => (
-            <li>{todo.title}<li>
+            <li>{todo.title}</li>
         ))
         return (
             <div>
@@ -153,7 +153,7 @@ class TodoApp extends Sunshine.Component<DefaultProps,Props,ComponentState> {
                 <ul>
                     {todos}
                 </ul>
-            <div>
+            </div>
         )
     }
 }
@@ -204,6 +204,7 @@ And the number of todos returned should be limited based on the component's
 
 ```js
 import nanoscope from 'nanoscope'
+import type { Lens } from 'nanoscope'
 
 var todosLens: Lens<AppState,Todo[]> = new nanoscope.PathLens('todos')
 
@@ -382,6 +383,13 @@ operation completes.
 For example:
 
 ```js
+import Promise from 'es6-promise'
+Promise.polyfill()
+
+import {} from 'whatwg-fetch'
+// Tells Flow that `fetch` is a global function.
+declare var fetch: Function;
+
 class AddTodoWithAuthor {
     title: string;
     authorId: number;
@@ -392,7 +400,7 @@ class AddTodoWithAuthor {
 }
 
 class AppendTodo {
-    todo: Todo
+    todo: Todo;
     constructor(todo: Todo) {
         this.todo = todo
     }
@@ -412,7 +420,7 @@ app.on(AddTodoWithAuthor, (state, { title, authorId }) => {
 })
 
 app.on(AppendTodo, (state, { todo }) => {
-    return todoLens.map(state, todos => todos.concat(todo))
+    return todosLens.map(state, todos => todos.concat(todo))
 })
 ```
 
