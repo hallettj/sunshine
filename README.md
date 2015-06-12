@@ -59,7 +59,7 @@ Prerequisites
 
 Install Sunshine using npm:
 
-    $ npm install --save https://github.com/hallettj/sunshine.git
+    $ npm install --save hallettj/sunshine
 
 You will also need nanoscope to create lenses:
 
