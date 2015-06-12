@@ -9,7 +9,8 @@
   "main": "sunshine.js",
   "dependencies": {
     "kefir": "^2.1.0",
-    "nanoscope": "^2.1.5"
+    "nanoscope": "^2.1.5",
+    "react": "^0.13.3"
   },
   "devDependencies": {
     "babel-core": "^5.5.6",
