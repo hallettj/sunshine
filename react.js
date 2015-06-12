@@ -74,7 +74,7 @@ export class Component<DefProps,Props,ComponentState> extends React.Component<De
 }
 
 function subscribe<S>(state: S): Subscribe<S> {
-  return function subscribe_<V>(sub: Subscriber<AppStateStandin,V>): V {
+  return function subscribe_<V>(sub: Subscriber<*,V>): V {
     if (typeof sub === 'function') {
       return sub(state)
     }
