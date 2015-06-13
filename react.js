@@ -83,7 +83,8 @@ Component.childContextTypes = {
 }
 
 function subscribe<S>(state: S): Subscribe<S> {
-  return function subscribe_<V>(sub: Subscriber<*,V>): V {
+  // TODO: When babel-loader catches up, use `*` instead of `any`.
+  return function subscribe_<V>(sub: Subscriber<any,V>): V {
     if (typeof sub === 'function') {
       return sub(state)
     }
