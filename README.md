@@ -54,10 +54,27 @@ and to use pure(-ish) JavaScript.
 [re-frame readme]: https://github.com/Day8/re-frame/blob/master/README.md
 
 
+Quickstart
+----------
+
+To get started with Sunshine as quickly as possible,
+clone [sunshine-template][] to get a ready-made project skeleton.
+
+    $ git clone https://github.com/hallettj/sunshine-template.git my-app
+
+And follow the instructions in the [sunshine-template README][] to run the
+template app.
+Refer back to this documentation for information on how to write code with
+Sunshine.
+
+[sunshine-template]: https://github.com/hallettj/sunshine-template
+[sunshine-template README]: https://github.com/hallettj/sunshine-template/blob/master/README.md
+
+
 Prerequisites
 -------------
 
-Install Sunshine using npm:
+To get started from scratch, install Sunshine using npm:
 
     $ npm install --save hallettj/sunshine
 
