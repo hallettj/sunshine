@@ -42,7 +42,7 @@ export class App<AppState> {
     .map(([_, handler]) => handler)
 
     var nextState = handlers.reduce(
-      (state, handler) => handler(state, event),
+      (state, handler) => handler(state, event) || prevState,
       prevState
     )
     return nextState;
