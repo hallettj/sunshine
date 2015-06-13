@@ -2,9 +2,10 @@
   "name": "sunshine",
   "version": "0.1.0",
   "description": "Framework for client-side apps, based on Flux and functional reactive programming",
+  "homepage": "https://github.com/hallettj/sunshine",
   "repository": {
     "type": "git",
-    "url": "TODO"
+    "url": "https://github.com/hallettj/sunshine.git"
   },
   "main": "sunshine.js",
   "dependencies": {

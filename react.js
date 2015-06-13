@@ -28,8 +28,8 @@ export class Component<DefProps,Props,ComponentState> extends React.Component<De
     super(props, context)
 
     // Set initial state
-    var initState = deref(this._app().state)
-    var state = this.getSubscribers(subscribe(initState))
+    var initState = this._app() && deref(this._app().state)
+    var state = initState && this.getSubscribers(subscribe(initState))
     if (state) { this.state = state }
     this._hasSubscribers = !!state
   }
