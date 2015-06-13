@@ -19,17 +19,18 @@ type Context<AppState> = {
 
 export class Component<DefProps,Props,ComponentState> extends React.Component<DefProps,Props,ComponentState> {
   context:         Context<AppStateStandin>;
-  state:           ComponentState;
+  state:           ?ComponentState;
   _hasSubscribers: boolean;
   _changes:        ?Stream<AppStateStandin>;
   _onStateChange:  ?((_: AppStateStandin) => void);
 
-  constructor(props: Props, context: { app: Sunshine.App<AppStateStandin> }) {
+  constructor(props: Props, context: Context<AppStateStandin>) {
     super(props, context)
 
     // Set initial state
-    var initState = this._app() && deref(this._app().state)
-    var state = initState && this.getSubscribers(subscribe(initState))
+    var app = this._app()
+    var initState = app ? deref(app.state) : null
+    var state = initState ? this.getSubscribers(subscribe(initState)) : null
     if (state) { this.state = state }
     this._hasSubscribers = !!state
   }
@@ -40,15 +41,21 @@ export class Component<DefProps,Props,ComponentState> extends React.Component<De
   }
 
   emit<Event: Object>(event: Event) {
-    this._app().emit(event)
+    var app = this._app()
+    if (app) {
+      app.emit(event)
+    }
+    else {
+      throw "Cannot emit event because no app instance was given: " + event
+    }
   }
 
-  _app(): Sunshine.App<AppStateStandin> {
+  _app(): ?Sunshine.App<AppStateStandin> {
     return this.context._sunshineApp || this.props.app
   }
 
   getChildContext(): Context<AppStateStandin> {
-    return { _sunshineApp: this._app() }
+    return { _sunshineApp: (this._app(): any) }
   }
 
   componentDidMount() {
@@ -59,9 +66,12 @@ export class Component<DefProps,Props,ComponentState> extends React.Component<De
           this.setState(componentState)
         }
       }
-      var changes = this._app().state.changes()
-      changes.onValue(this._onStateChange)
-      this._changes = changes
+      var app = this._app()
+      if (app) {
+        var changes = app.state.changes()
+        changes.onValue(this._onStateChange)
+        this._changes = changes
+      }
     }
   }
 
