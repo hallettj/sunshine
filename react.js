@@ -75,7 +75,7 @@ export class Component<DefProps,Props,ComponentState> extends React.Component<De
 // In development mode, React will not provide context values to a component
 // unless those values are declared with `contextTypes`.
 Component.contextTypes = {
-  _sunshineApp: React.PropTypes.instanceOf(Sunshine.App).isRequired
+  _sunshineApp: React.PropTypes.instanceOf(Sunshine.App)
 }
 
 Component.childContextTypes = {
