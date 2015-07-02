@@ -2,6 +2,7 @@
   "name": "sunshine",
   "version": "0.1.0",
   "description": "Framework for client-side apps, based on Flux and functional reactive programming",
+  "license": "Apache-2.0",
   "homepage": "https://github.com/hallettj/sunshine",
   "repository": {
     "type": "git",
