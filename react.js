@@ -46,7 +46,7 @@ export class Component<DefProps,Props,ComponentState> extends React.Component<De
       app.emit(event)
     }
     else {
-      throw "Cannot emit event because no app instance was given: " + event
+      throw "Cannot emit event because no app instance was given: " + String(event)
     }
   }
 
