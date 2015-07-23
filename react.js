@@ -4,25 +4,22 @@ import React from 'react'
 import * as Sunshine from './sunshine'
 
 import type { Property, Stream } from 'kefir';
-import type { Lens } from 'nanoscope';
-import type { Subscribe, Subscriber } from './sunshine'
 
 export { App } from './sunshine'
 export type Handler<AppState, Event> = (s: AppState, e: Event) => AppState
-export type Subscriber<AppState, View> = Lens<AppState, View> | (s: AppState) => View
-export type Subscribe<AppState> = (<View>(sub: Subscriber<AppState, View>) => View)
 
 type AppStateStandin = Object
 type Context<AppState> = {
   _sunshineApp: Sunshine.App<AppState>
 }
 
-export class Component<DefProps,Props,ComponentState> extends React.Component<DefProps,Props,ComponentState> {
-  context:         Context<AppStateStandin>;
-  state:           ?ComponentState;
-  _hasSubscribers: boolean;
-  _changes:        ?Stream<AppStateStandin>;
-  _onStateChange:  ?((_: AppStateStandin) => void);
+export class Component<DefProps,Props,ComponentState:Object> extends
+                                React.Component<DefProps,Props,ComponentState> {
+  context:        Context<AppStateStandin>;
+  state:          ComponentState;
+  _hasState:      boolean;
+  _changes:       ?Stream<AppStateStandin>;
+  _onStateChange: ?((_: AppStateStandin) => void);
 
   constructor(props: Props, context: Context<AppStateStandin>) {
     super(props, context)
@@ -30,15 +27,15 @@ export class Component<DefProps,Props,ComponentState> extends React.Component<De
     // Set initial state
     var app = this._app()
     var initState = app ? deref(app.state) : null
-    var state = initState ? this.getSubscribers(subscribe(initState)) : null
-    if (state) { this.state = state }
-    this._hasSubscribers = !!state
+    var state = initState ? this.getState(initState) : null
+    this._hasState = Boolean(state)
+    if (state) {
+      this.state = state
+    }
   }
 
-  // Override `getSubscribers` to access app state.
-  getSubscribers(subscribe: Subscribe<AppStateStandin>): ?ComponentState {
-    return null
-  }
+  // Override `getState` to subscribe to application state.
+  getState(appState: AppStateStandin): ?ComponentState {}
 
   emit<Event: Object>(event: Event) {
     var app = this._app()
@@ -59,12 +56,10 @@ export class Component<DefProps,Props,ComponentState> extends React.Component<De
   }
 
   componentDidMount() {
-    if (this._hasSubscribers) {
+    if (this._hasState) {
       this._onStateChange = appState => {
-        var componentState = this.getSubscribers(subscribe(appState))
-        if (componentState) {
-          this.setState(componentState)
-        }
+        var componentState = this.getState(appState)
+        if (componentState) { this.setState(componentState) }
       }
       var app = this._app()
       if (app) {
@@ -90,18 +85,6 @@ Component.contextTypes = {
 
 Component.childContextTypes = {
   _sunshineApp: React.PropTypes.instanceOf(Sunshine.App).isRequired
-}
-
-function subscribe<S>(state: S): Subscribe<S> {
-  // TODO: When babel-loader catches up, use `*` instead of `any`.
-  return function subscribe_<V>(sub: Subscriber<any,V>): V {
-    if (typeof sub === 'function') {
-      return sub(state)
-    }
-    else {
-      return sub.view(state).get()
-    }
-  }
 }
 
 function deref<T>(prop: Property<T>): T {

@@ -3,11 +3,9 @@
 import Kefir from 'kefir';
 
 import type { Emitter, Property, Stream } from 'kefir';
-import type { Lens } from 'nanoscope';
+import type { Getter } from 'lens';
 
 export type Handler<AppState, Event> = (s: AppState, e: Event) => AppState
-export type Subscriber<AppState, View> = Lens<AppState, View> | (s: AppState) => View
-export type Subscribe<AppState> = (<View>(sub: Subscriber<AppState, View>) => View)
 
 export class App<AppState> {
   state: Property<AppState>;

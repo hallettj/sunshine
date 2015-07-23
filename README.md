@@ -78,9 +78,10 @@ To get started from scratch, install Sunshine using npm:
 
     $ npm install --save hallettj/sunshine
 
-You will also need nanoscope to create lenses:
+You will also need the lens library to create lenses,
+and Immutable.js to create immutable data structures:
 
-    $ npm install --save nanoscope
+    $ npm install --save hallettj/lens immutable
 
 To use Sunshine, you must use a build system that can handle JSX markup and
 Flow type annotations.
@@ -107,7 +108,7 @@ At a hand-wavy level, this is what a Sunshine app looks like:
              |              | app.on()                        |
       emit() |              |                                 |
              |       +------------------+                     |
-             |       |                  |                     | getSubscribers()
+             |       |                  |                     | getState()
              +------>|   event stream   |                     |
                      |                  |                     |
                      +------------------+                     |
@@ -119,10 +120,10 @@ At a hand-wavy level, this is what a Sunshine app looks like:
     |              |  emit()      emit()   |               |
     +--------------+                       +---------------+
 
-For a much more concrete look,
-see the example todo app under [examples/todomvc/][example].
+For a more concrete look,
+see the example todo app in [examples/simple-todo.js][example].
 
-[example]: https://github.com/hallettj/sunshine/tree/master/examples/todomvc
+[example]: https://github.com/hallettj/sunshine/tree/master/examples/simple-todo.js
 
 Everything in Sunshine revolves around the `Sunshine.App` class,
 and around app state.
@@ -130,13 +131,21 @@ The first thing that you will do is to define an initial state.
 Here is a very simple example:
 
 ```js
-type AppState = { todos: Todo[] }
-type Todo = {
-    title: string,
-    completed: boolean,
-}
+import { List, Record } from 'immutable'
 
-var initialState: AppState = { todos: [] }
+type AppState = Record<{ todos: List<Todo> }>
+type Todo = Record<{
+  title: string,
+  completed: boolean,
+}>
+
+var AppStateRecord = Record({ todos: List() })
+var TodoRecord = Record({
+  title: 'untitled',
+  completed: false,
+})
+
+var initialState: AppState = new AppStateRecord()
 ```
 
 And the next thing you will do is create an app:
@@ -154,28 +163,28 @@ app state, and for emitting events.
 ```js
 type DefaultProps = {}
 type Props = {
-    app: Sunshine.App<AppState>,
-    pageSize: number,
+  app: Sunshine.App<AppState>,
+  pageSize: number,
 }
-type ComponentState = { todos: Todo[] }
+type ComponentState = { todos: List<Todo> }
 
 class TodoApp extends Sunshine.Component<DefaultProps,Props,ComponentState> {
-    render(): React.Element {
-        var todos = this.state.todos.map(todo => (
-            <li>{todo.title}</li>
-        ))
-        return (
-            <div>
-                <form onSubmit={this.addTodo.bind(this)}>
-                    <input type="text" ref="title"/>
-                    <input type="submit" value="create todo"/>
-                </form>
-                <ul>
-                    {todos}
-                </ul>
-            </div>
-        )
-    }
+  render(): React.Element {
+    var todos = this.state.todos.map(todo => (
+      <li>{todo.title}</li>
+    ))
+    return (
+      <div>
+        <form onSubmit={this.addTodo.bind(this)}>
+          <input type="text" ref="title"/>
+          <input type="submit" value="create todo"/>
+        </form>
+        <ul>
+          {todos}
+        </ul>
+      </div>
+    )
+  }
 }
 ```
 
@@ -186,8 +195,8 @@ pass the instance to your top-level component using the `app` prop.
 
 ```js
 React.render(
-    <TodoApp pageSize={10} app={app} />
-    document.getElementById('todoapp')
+  <TodoApp pageSize={10} app={app} />
+  document.getElementById('app')
 )
 ```
 
@@ -200,21 +209,21 @@ you may need to create a wrapper component to set up the `app` prop
 (and any-other props you want to provide to your top-level component).
 
     class TodoAppWrapper extends Sunshine.Component<{},{},{}> {
-        render(): React.Element {
-            return (
-              <TodoApp pageSize={10} app={app}/>
-            )
-        }
+      render(): React.Element {
+        return (
+          <TodoApp pageSize={10} app={app}/>
+        )
+      }
     }
 
     var routes = (
-        <Route name="app" path="/" handler={TodoAppWrapper}>
-            // whatever
-        </Route>
+      <Route name="app" path="/" handler={TodoAppWrapper}>
+        // whatever
+      </Route>
     )
 
     Router.run(routes, Router.HashLocation, Root => {
-        React.render(<Root/>, document.getElementById('todoapp'))
+      React.render(<Root/>, document.getElementById('todoapp'))
     })
 
 [react-router]: https://github.com/rackt/react-router/
@@ -230,15 +239,17 @@ And the number of todos returned should be limited based on the component's
 `pageSize` prop.
 
 ```js
-import nanoscope from 'nanoscope'
-import type { Lens } from 'nanoscope'
+import type { Getter, Lens_, Traversal_ } from 'lens'
+import { compose, filtering } from 'lens'
+import { field, toListOf, traverse } from 'lens/immutable'
 
-var todosLens: Lens<AppState,Todo[]> = new nanoscope.PathLens('todos')
+var todosLens: Lens_<AppState,List<Todo>> = field('todos')
 
-var activeTodos: Lens<AppState,Todo[]> = todosLens.filter(todo => !todo.completed)
+var activeTodos: Traversal_<AppState,Todo> =
+  compose(todosLens, compose(traverse, filtering(todo => !todo.completed)))
 
-function todosPage(pageSize: number): Lens<AppState,Todo[]> {
-    return activeTodos.slice(`:${pageSize}`)
+function todosPage(pageSize: number): Getter<AppState,List<Todo>> {
+  return getter(state => toListOf(activeTodos, state).slice(0, pageSize))
 }
 ```
 
@@ -247,7 +258,7 @@ structure.
 Using a lens, that piece can be either read or (depending on the lens) updated.
 The same lens can be reused on many different data structures.
 
-`PathLens` focuses on a property in an object.
+`field` focuses on a property in an Immutable.js record.
 The lenses above focus on the `todos` property in a value of type `AppState`.
 The `activeTodos` gets a derived view by filtering that focus down to
 uncompleted todos.
@@ -255,57 +266,51 @@ uncompleted todos.
 further reducing the derived view of `activeTodos` down to just one page of
 active todos.
 
-The `` `:${pageSize}` `` construct is an [ES6 template string][].
-
-[ES6 template string]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/template_strings
-
 Here are some examples of how these lenses can be used:
 
 ```js
+import { get, set, over } from 'lens'
+
 // reading todos
-var todos = todosLens.get(initialState)
+var todos = get(todosLens, initialState)
+assertEqual(todos, List())
 
 // setting todos;
 // `newState` is a new object with the new todos list. `initialState` is not modified.
-var newState = todosLens.set(initialState, [{ title: 'add todo', completed: true }])
+var newState = set(todosLens, List([
+  new TodoRecord({ title: 'add todo', completed: true })
+]), initialState)
 
 // modifying todos without replacing the whole list
-var newnewState = todosLens.map(initialState, todos => todos.concat({
-    title: 'append a todo',
-    completed: true,
-}))
+var newnewState = over(todosLens, todos => todos.push(new TodoRecord({
+  title: 'append a todo',
+  completed: false,
+})), newState)
 
 // reading a page of active todos
 var pageLens = todosPage(5)
-var page = pageLens.get(newnewState)
+var page = get(pageLens, newnewState)
 ```
 
-There is more information in the nanoscope documentation.
-The documentation is split up at the moment.
-Documentation for methods on lenses is available on the [official site][nanoscope].
-Documentation for creating lenses is in the nanoscope repository,
-in [out/index.html][nanoscope-docs].
-The best way to read those docs is to clone the repository,
-and open `index.html` locally.
+There is more information in the [lens documentation][].
 
-[nanoscope]: http://kovach.me/nanoscope/
-[nanoscope-docs]: https://github.com/5outh/nanoscope/blob/master/out/index.html
+[lens documentation]: https://github.com/hallettj/lens.js/blob/master/README.md
 
 React components are connected to app state by implementing a method called
-`getSubscribers`.
+`getState`.
 Use lenses to subscribe to just the little bits of state that your component
 needs access to.
 
 ```js
 class TodoApp extends Sunshine.Component<DefaultProps,Props,ComponentState> {
 
-    getSubscribers(subscribe: Sunshine.Subscribe<AppState>): ComponentState {
-        return {
-            todos: subscribe(todosPage(this.props.pageSize))
-        }
+  getState(appState: AppState): ComponentState {
+    return {
+      todos: get(todosPage(this.props.pageSize), appState)
     }
+  }
 
-    // render() is the same as before
+  // render() is the same as before
 }
 ```
 
@@ -322,10 +327,10 @@ To emit events, we have to define event types.
 
 ```js
 class AddTodoEvent {
-    title: string;
-    constructor(title: string) {
-        this.title = title
-    }
+  title: string;
+  constructor(title: string) {
+    this.title = title
+  }
 }
 ```
 
@@ -339,12 +344,12 @@ class TodoApp extends Sunshine.Component<DefaultProps,Props,ComponentState> {
 
     // The rest of the class is the same as before.
 
-    addTodo(event: Event) {
-        event.preventDefault()
-        var input = React.findDOMNode(this.refs.title)
-        var title = input.value
-        this.emit(new AddTodoEvent(title))
-    }
+  addTodo(event: Event) {
+    event.preventDefault()
+    var input = React.findDOMNode(this.refs.title)
+    var title = input.value
+    this.emit(new AddTodoEvent(title))
+  }
 
 }
 ```
@@ -362,24 +367,29 @@ Remember how a lens can both read and update a data structure?
 
 ```js
 app.on(AddTodoEvent, (state, { title }) => {
-    return todosLens.map(state, todos => todos.concat({
-        title: title,
-        completed: false,
-    }))
+  return over(todosLens, todos => todos.push(new TodoRecord({
+    title: title,
+    completed: false,
+  })), state)
 })
 ```
 
-The `map()` method on a lens takes an update function.
-The function takes the existing value at the focused spot,
+The `over()` function takes a lens, an update function,
+and a data structure to update.
+The update function takes the existing value at the focused spot,
 and returns a new value.
-`map()` returns a new copy of the entire data structure
+`over()` returns a new copy of the entire data structure
 (in this case the whole app state)
-with the new value.
+with the update.
 This means that lenses provide immutable updates.
 
 *Do not modify app state in-place.*
 Sunshine makes the assumption that app state is never mutated.
 If state is mutated, stuff will break.
+This is partly why examples use Immutable.js to implement state.
+It is possible to use Sunshine without Immutable.
+But with Immutable you get better performance on state updates,
+and it is harder to shoot yourself in the foot.
 
 The second argument to the event handler callback is an event object -
 in this case an instance of `AddTodoEvent`.
@@ -389,8 +399,8 @@ Without destructuring, the handler would like like this:
 
 ```js
 app.on(AddTodoEvent, (state, event) => {
-    var title = event.title
-    // ...
+  var title = event.title
+  // ...
 })
 ```
 
@@ -418,36 +428,36 @@ import {} from 'whatwg-fetch'
 declare var fetch: Function;
 
 class AddTodoWithAuthor {
-    title: string;
-    authorId: number;
-    constructor(title: string, authorId: number) {
-        this.title = title
-        this.authorId = authorId
-    }
+  title: string;
+  authorId: number;
+  constructor(title: string, authorId: number) {
+    this.title = title
+    this.authorId = authorId
+  }
 }
 
 class AppendTodo {
-    todo: Todo;
-    constructor(todo: Todo) {
-        this.todo = todo
-    }
+  todo: Todo;
+  constructor(todo: Todo) {
+    this.todo = todo
+  }
 }
 
 app.on(AddTodoWithAuthor, (state, { title, authorId }) => {
-    fetch(`/users/${authorId}`).then(response => {
-        response.json().then(author => {
-            var todo = {
-                title,
-                author,
-                completed: false,
-            }
-            app.emit(new AppendTodo(todo))
-        })
+  fetch(`/users/${authorId}`).then(response => {
+    response.json().then(author => {
+      var todo = new TodoRecord({
+        title,
+        author,  // Imagine we added an author field to the Todo type
+        completed: false,
+      })
+      app.emit(new AppendTodo(todo))
     })
+  })
 })
 
 app.on(AppendTodo, (state, { todo }) => {
-    return todosLens.map(state, todos => todos.concat(todo))
+    return over(todosLens, todos => todos.push(todo), state)
 })
 ```
 
@@ -499,19 +509,21 @@ TODO: explain this
 
 ### Isn't copying the entire app state on every update inefficient?
 
-TODO: discuss tradeoffs, suggest Immutable.js
-TODO: lens suport for Immutable.js
+Actually, Immutable.js makes this very efficient.
+See the [documentation][Immutable] for details.
+
+[Immutable]: https://facebook.github.io/immutable-js/
 
 ### Can I use `setState()` directly?
 
 Yes, with the caveat that you should not use Sunshine-managed state and
 manually-managed state in the same component.
 
-Sunshine components that implement `getSubscribers()` have their state managed by Sunshine.
+Sunshine components that implement `getState()` have their state managed by Sunshine.
 That means that anything you set with `setState()` will be overwritten.
 It is not a good idea to call `setState()` in one of these components.
 
-Sunshine components that do not implement `getSubscribers()` can emit events,
+Sunshine components that do not implement `getState()` can emit events,
 but do not have their state managed by Sunshine.
 It is fine to use `setState()` in these components -
 or to use some other framework that manages state in a different way.

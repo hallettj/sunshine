@@ -10,8 +10,9 @@
   },
   "main": "sunshine.js",
   "dependencies": {
+    "immutable": "^3.7.4",
     "kefir": "^2.1.0",
-    "nanoscope": "^2.1.5",
+    "lens": "hallettj/lens.js#master",
     "react": "^0.13.3"
   },
   "devDependencies": {
