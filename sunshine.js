@@ -14,9 +14,13 @@ export class App<AppState> {
   _handlers: [Class<any>, Handler<AppState, any>][];
 
   constructor(initialState: AppState, ready?: () => void) {
+    var isReady = false
     var input = Kefir.stream(emitter => {
       this._emitter = emitter
-      setTimeout(ready, 0)
+      if (!isReady) {
+        isReady = true
+        setTimeout(ready, 0)
+      }
       return () => undefined
     })
     var output = input.scan(this._handleEvent.bind(this), initialState)
