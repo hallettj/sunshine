@@ -36,7 +36,7 @@ export class App<AppState> {
   }
 
   emit<Event: Object>(event: Event) {
-    this._emitter.emit(event);
+    setTimeout(() => this._emitter.emit(event), 0);
   }
 
   _handleEvent(prevState: AppState, event: Object): AppState {
