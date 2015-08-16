@@ -9,11 +9,13 @@ export type Handler<AppState, Event> = (s: AppState, e: Event) => AppState
 
 export class App<AppState> {
   state: Property<AppState>;
+  currentState: AppState;
   _input: Stream<Object>;
   _emitter: Emitter<Object>;
   _handlers: [Class<any>, Handler<AppState, any>][];
 
   constructor(initialState: AppState, ready?: () => void) {
+    this.currentState = initialState
     var isReady = false
     var input = Kefir.stream(emitter => {
       this._emitter = emitter
@@ -48,6 +50,7 @@ export class App<AppState> {
       (state, handler) => handler(state, event) || prevState,
       prevState
     )
+    this.currentState = nextState
     return nextState;
   }
 

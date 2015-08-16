@@ -26,7 +26,7 @@ export class Component<DefProps,Props,ComponentState:Object> extends
 
     // Set initial state
     var app = this._app()
-    var initState = app ? deref(app.state) : null
+    var initState = app ? app.currentState : null
     var state = initState ? this.getState(initState) : null
     this._hasState = Boolean(state)
     if (state) {
@@ -85,13 +85,4 @@ Component.contextTypes = {
 
 Component.childContextTypes = {
   _sunshineApp: React.PropTypes.instanceOf(Sunshine.App).isRequired
-}
-
-function deref<T>(prop: Property<T>): T {
-  var value: any;
-  prop.onValue(function get(v) {
-    value = v
-    prop.offValue(get)
-  })
-  return value
 }
