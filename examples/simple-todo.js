@@ -2,9 +2,9 @@
 
 import * as Sunshine from '../react'
 import { List, Record, is } from 'immutable'
-import { compose, filtering, get, getter, over, set } from 'lens'
-import { field, toListOf, traverse } from 'lens/immutable'
-import type { Getter, Lens_, Traversal_ } from 'lens'
+import { compose, filtering, get, getter, over, set } from 'safety-lens'
+import { field, toListOf, traverse } from 'safety-lens/immutable'
+import type { Getter, Lens_, Traversal_ } from 'safety-lens'
 import React from 'react'
 
 

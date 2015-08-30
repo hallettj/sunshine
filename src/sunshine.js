@@ -1,9 +1,9 @@
 /* @flow */
 
-import Kefir from 'kefir';
+import Kefir from 'kefir'
 
-import type { Emitter, Property, Stream } from 'kefir';
-import type { Getter } from 'lens';
+import type { Emitter, Property, Stream } from 'kefir'
+import type { Getter } from 'safety-lens'
 
 export type Handler<AppState, Event> = (s: AppState, e: Event) => AppState
 

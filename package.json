@@ -9,14 +9,17 @@
     "url": "https://github.com/hallettj/sunshine.git"
   },
   "main": "sunshine.js",
+  "scripts": {
+    "prepublish": "node_modules/.bin/flow check && make"
+  },
   "dependencies": {
     "immutable": "^3.7.4",
     "kefir": "^2.1.0",
-    "lens": "hallettj/lens.js#master",
-    "react": "^0.13.3"
+    "react": "^0.13.3",
+    "safety-lens": "^1.0.1"
   },
   "devDependencies": {
-    "babel-core": "^5.5.6",
+    "babel": "^5.8.23",
     "flow-bin": "^0.14.0"
   }
 }

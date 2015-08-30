@@ -15,7 +15,7 @@ type Context<AppState> = {
 
 export class Component<DefProps,Props,ComponentState:Object> extends
                                 React.Component<DefProps,Props,ComponentState> {
-  context:        Context<AppStateStandin>;
+  context:        $Subtype<Context<AppStateStandin>>;
   state:          ComponentState;
   _hasState:      boolean;
   _changes:       ?Stream<AppStateStandin>;
