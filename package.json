@@ -1,6 +1,6 @@
 {
   "name": "sunshine-framework",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Framework for client-side apps, based on Flux and functional reactive programming",
   "license": "Apache-2.0",
   "homepage": "https://github.com/hallettj/sunshine",
@@ -12,6 +12,11 @@
   "scripts": {
     "prepublish": "node_modules/.bin/flow check && make"
   },
+  "files": [
+    "sunshine.js",
+    "react.js",
+    "types"
+  ],
   "dependencies": {
     "immutable": "^3.7.4",
     "kefir": "^2.1.0",
