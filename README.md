@@ -468,6 +468,20 @@ your best bet is to pester the author.
 The author's number is 503-928-6714.
 
 
+Consuming types
+---------------
+
+To include type information with this library, create a `.flowconfig` file in
+your project root with a reference to the interface file directory in this
+module.
+For example:
+
+```
+[libs]
+node_modules/sunshine/types/
+```
+
+
 Questions that someone might one day ask
 ----------------------------------------
 
