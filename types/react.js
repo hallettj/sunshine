@@ -1,8 +1,8 @@
 import type { React }            from 'react'
 import type { Property, Stream } from 'kefir'
-import type * as Sunshine        from 'sunshine'
+import type * as Sunshine        from 'sunshine-framework'
 
-declare module 'sunshine/react' {
+declare module 'sunshine-framework/react' {
   declare var App: Class<Sunshine.App>;
 
   declare type AppStateStandin = Object

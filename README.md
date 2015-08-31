@@ -76,12 +76,12 @@ Prerequisites
 
 To get started from scratch, install Sunshine using npm:
 
-    $ npm install --save hallettj/sunshine
+    $ npm install --save sunshine-framework
 
-You will also need the lens library to create lenses,
+You will also need the safety-lens library to create lenses,
 and Immutable.js to create immutable data structures:
 
-    $ npm install --save hallettj/lens immutable
+    $ npm install --save safety-lens immutable
 
 To use Sunshine, you must use a build system that can handle JSX markup and
 Flow type annotations.
@@ -151,7 +151,7 @@ var initialState: AppState = new AppStateRecord()
 And the next thing you will do is create an app:
 
 ```js
-import * as Sunshine from 'sunshine/react'
+import * as Sunshine from 'sunshine-framework/react'
 
 var app = new Sunshine.App(initialState)
 ```
@@ -478,7 +478,7 @@ For example:
 
 ```
 [libs]
-node_modules/sunshine/types/
+node_modules/sunshine-framework/types/
 ```
 
 

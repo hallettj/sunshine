@@ -1,6 +1,6 @@
 import type { Property } from 'kefir'
 
-declare module 'sunshine' {
+declare module 'sunshine-framework' {
   declare type Handler<AppState, Event> = (s: AppState, e: Event) => AppState;
 
   declare class App<AppState> {
