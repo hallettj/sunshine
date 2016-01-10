@@ -1,6 +1,6 @@
 {
   "name": "sunshine-framework",
-  "version": "1.2.1",
+  "version": "2.0.0-pre",
   "description": "Framework for client-side apps, based on Flux and functional reactive programming",
   "license": "Apache-2.0",
   "homepage": "https://github.com/hallettj/sunshine",
@@ -10,6 +10,7 @@
   },
   "main": "sunshine.js",
   "scripts": {
+    "test": "node_modules/.bin/babel-node node_modules/.bin/_mocha --full-trace --recursive -R spec -C --check-leaks test/",
     "prepublish": "node_modules/.bin/flow check && make"
   },
   "files": [
@@ -19,12 +20,15 @@
   ],
   "dependencies": {
     "immutable": "^3.7.4",
-    "kefir": "^2.1.0",
+    "kefir": "^3.2.0",
     "react": "^0.13.3",
     "safety-lens": "^1.0.2"
   },
   "devDependencies": {
     "babel": "^5.8.23",
-    "flow-bin": "^0.14.0"
+    "chai": "^3.4.1",
+    "chai-as-promised": "^5.2.0",
+    "flow-bin": "^0.20.1",
+    "mocha": "^2.3.4"
   }
 }
