@@ -3,8 +3,8 @@
 import * as Sunshine from '../../src/sunshine'
 import { emit, handle, updateAndEmit } from '../../src/sunshine'
 
-function MailApp(onReady: Function): Sunshine.App<AppState> {
-  return new Sunshine.App(handlers, initialState, onReady)
+function MailApp(state: $Shape<AppState>): Sunshine.App<AppState> {
+  return new Sunshine.App(handlers, set(initialState, state))
 }
 
 

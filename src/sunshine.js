@@ -57,18 +57,13 @@ class App<AppState> {
   _emitter: Emitter<Object>;
   _handlers: [Class<any>, Handler<AppState, any>][];
 
-  constructor(handlers: Handlers<AppState>, initialState: AppState, ready?: () => void) {
+  constructor(handlers: Handlers<AppState>, initialState: AppState) {
     this.currentState = initialState
-    var isReady = false
-    var input = Kefir.stream(emitter => {
+    const input = Kefir.stream(emitter => {
       this._emitter = emitter
-      if (!isReady) {
-        isReady = true
-        setTimeout(ready, 0)
-      }
-      return () => undefined
     })
-    var output = input.scan(this._handleEvent.bind(this), initialState)
+    const output = input.scan(this._handleEvent.bind(this), initialState)
+    output.onValue(_ => {})  // force observables to activate
     this.state = output
     this._input = input
     this._handlers = Array.from(handlers)

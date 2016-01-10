@@ -14,9 +14,8 @@ declare var it;
 describe('sunshine', function() {
 
   it('queues requests for messages', function(done) {
-    const app = MailApp(() => {
-      app.emit(new GetMessages('from:Alice'))
-    })
+    const app = MailApp()
+    app.emit(new GetMessages('from:Alice'))
     app.state.onValue(state => {
       const pending = state.pendingQueries
       if (pending.length > 0) {
@@ -27,9 +26,8 @@ describe('sunshine', function() {
   })
 
   it('emits request for authentication token', function(done) {
-    const app = MailApp(() => {
-      app.emit(new GetMessages('from:Alice'))
-    })
+    const app = MailApp()
+    app.emit(new GetMessages('from:Alice'))
     app._input.onValue(event => {
       if (event instanceof GetAuthToken) {
         done()
