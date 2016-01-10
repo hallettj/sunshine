@@ -59,6 +59,7 @@ const handlers: Sunshine.Handlers<AppState> = [
       const asyncUpdate = Promise.all(
         pendingQueries.map(q => fetch(q, authToken))
       )
+      .then(mss => Array.prototype.concat.apply([], mss))
       .then(ms => state => set(state, { messages: ms }))
       return {
         state: newState,
@@ -82,11 +83,13 @@ const handlers: Sunshine.Handlers<AppState> = [
 
 // stubs
 
+const fixtureMessages = [
+  { from: 'Joe', body: 'hi' },
+  { from: 'Alice', body: '525f8e2858d56a93bca87dfb818d5bce98bef638' },
+]
+
 function fetch(query: string, authToken: string): Promise<Message[]> {
-  return Promise.resolve([
-    { from: 'Joe', body: 'hi' },
-    { from: 'Alice', body: '525f8e2858d56a93bca87dfb818d5bce98bef638' },
-  ])
+  return Promise.resolve(fixtureMessages)
 }
 
 
@@ -97,10 +100,12 @@ function set<T: Object>(state: T, changes: $Shape<T>): T {
 }
 
 export {
+  MailApp,
   GetAuthToken,
   GetMessages,
   RunQueries,
-  MailApp,
+  SetAuthToken,
   handlers,
   fetch,
+  fixtureMessages,
 }

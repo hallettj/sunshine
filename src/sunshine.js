@@ -6,7 +6,7 @@ import type { Emitter, Property, Stream } from 'kefir'
 
 export type EventResult<AppState> = {
   state?: AppState,
-  asyncUpdate?: Promise<(_: AppState) => AppState>,
+  asyncUpdate?: Promise<Updater<AppState>>,
   events?: Iterable<Object>,
 }
 
@@ -14,17 +14,18 @@ export type Handler<AppState, Event> = (s: AppState, e: Event) => EventResult<Ap
 export type Handlers<AppState> = Iterable<[Class<any>, Handler<AppState,any>]>
 
 
-// special event types
+/* special event types */
 
 export type Updater<AppState> = (latestState: AppState) => AppState
 
+// intentionally not exported
 class AsyncUpdate<T> {
   updater: Updater<T>;
   constructor(updater: Updater<T>) { this.updater = updater }
 }
 
 
-// helper functions for building EventResult<T> values
+/* helper functions for building EventResult<T> values */
 
 function handle<AppState, Event>(
   eventType: Class<Event>,
@@ -50,6 +51,8 @@ function asyncUpdate<AppState>(promise: Promise<AppState>): EventResult<AppState
 }
 
 
+/* implementation */
+
 class App<AppState> {
   state: Property<AppState>;
   currentState: AppState;
@@ -67,6 +70,11 @@ class App<AppState> {
     this.state = output
     this._input = input
     this._handlers = Array.from(handlers)
+
+    // special event handlers
+    this._handlers.push(
+      handle(AsyncUpdate, (state, { updater }) => update(updater(state)))
+    )
   }
 
   emit<Event: Object>(event: Event) {
@@ -89,7 +97,10 @@ class App<AppState> {
   _applyResult(result: EventResult<AppState>, prevState: AppState): AppState {
     const { state, asyncUpdate, events } = result
     if (asyncUpdate) {
-      asyncUpdate.then(updater => this._emitter.emit(new AsyncUpdate(updater)))
+      asyncUpdate.then(
+        updater => this._emitter.emit(new AsyncUpdate(updater)),
+        this._emitter.error
+      )
     }
     if (events) {
       for (const event of events) {
