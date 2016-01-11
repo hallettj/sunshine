@@ -98,13 +98,15 @@ class App<AppState> {
     const { state, asyncUpdate, events } = result
     if (asyncUpdate) {
       asyncUpdate.then(
-        updater => this._emitter.emit(new AsyncUpdate(updater)),
+        updater => {
+          this.emit(new AsyncUpdate(updater))
+        },
         this._emitter.error
       )
     }
     if (events) {
       for (const event of events) {
-        this._emitter.emit(event)
+        this.emit(event)
       }
     }
     return state || prevState

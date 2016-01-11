@@ -1,6 +1,7 @@
 /* @flow */
 
 import chai from 'chai'
+import chaiAsPromised from 'chai-as-promised'
 import {
   MailApp,
   GetAuthToken,
@@ -10,21 +11,22 @@ import {
 } from './apps/mail'
 
 const expect = chai.expect
+chai.use(chaiAsPromised)
 declare var describe;
 declare var it;
 
 describe('sunshine', function() {
 
-  it('queues requests for messages', function(done) {
+  it('queues requests for messages', function() {
     const app = MailApp()
     app.emit(new GetMessages('from:Alice'))
-    app.state.onValue(state => {
-      const pending = state.pendingQueries
-      if (pending.length > 0) {
-        expect(pending[0]).to.equal('from:Alice')
-        done()
-      }
-    })
+    const pending = app.state.filter(
+      state => state.pendingQueries.length > 0
+    )
+    .map(state => state.pendingQueries)
+    .take(1)
+    .toPromise()
+    return expect(pending).to.eventually.deep.equal(['from:Alice'])
   })
 
   it('emits request for authentication token', function(done) {
