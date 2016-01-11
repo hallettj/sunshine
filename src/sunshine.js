@@ -46,8 +46,8 @@ function updateAndEmit<AppState>(newState: AppState, ...events: Object[]): Event
   return { state: newState, events }
 }
 
-function asyncUpdate<AppState>(promise: Promise<AppState>): EventResult<AppState> {
-  return { promise }
+function asyncUpdate<AppState>(asyncUpdate: Promise<Updater<AppState>>): EventResult<AppState> {
+  return { asyncUpdate }
 }
 
 

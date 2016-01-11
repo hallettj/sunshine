@@ -63,7 +63,7 @@ const handlers: Sunshine.Handlers<AppState> = [
       .then(ms => state => set(state, { messages: ms }))
       return {
         state: newState,
-        async: asyncUpdate,
+        asyncUpdate,
       }
     }
     else {

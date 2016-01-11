@@ -16,6 +16,7 @@ declare var describe;
 declare var it;
 
 describe('sunshine', function() {
+  this.timeout(100)
 
   it('queues requests for messages', function() {
     const app = MailApp()
