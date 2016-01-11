@@ -2,6 +2,7 @@
 
 import * as Sunshine from '../../src/sunshine'
 import { emit, handle, updateAndEmit } from '../../src/sunshine'
+import { set } from '../util'
 
 function MailApp(state: $Shape<AppState>): Sunshine.App<AppState> {
   return new Sunshine.App(handlers, set(initialState, state))
@@ -45,6 +46,7 @@ class SetAuthToken {
 // event handlers
 
 const handlers: Sunshine.Handlers<AppState> = [
+
   handle(GetMessages, (state, { query }) => {
     const newState = set(state, {
       pendingQueries: state.pendingQueries.concat(query)
@@ -93,11 +95,6 @@ function fetch(query: string, authToken: string): Promise<Message[]> {
 }
 
 
-// helpers
-
-function set<T: Object>(state: T, changes: $Shape<T>): T {
-  return Object.assign({}, state, changes)
-}
 
 export {
   MailApp,
