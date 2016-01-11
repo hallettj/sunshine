@@ -12,7 +12,7 @@ export type EventResult<AppState> = {
 
 export type Handler<AppState, Event> = (s: AppState, e: Event) => EventResult<AppState>
 export type Handlers<AppState> = Iterable<[Class<any>, Handler<AppState,any>]>
-
+export type WithApps<AppState> = Iterable<[App<any>, Lens_<AppState, any>]>
 
 /* special event types */
 
@@ -26,13 +26,6 @@ class AsyncUpdate<T> {
 
 
 /* helper functions for building EventResult<T> values */
-
-function handle<AppState, Event>(
-  eventType: Class<Event>,
-  handler: Handler<AppState, Event>
-): [Class<Event>, Handler<AppState, Event>] {
-  return [eventType, handler]
-}
 
 function emit<T>(...events: Object[]): EventResult<T> {
   return { events }
@@ -53,6 +46,20 @@ function asyncUpdate<AppState>(asyncUpdate: Promise<Updater<AppState>>): EventRe
 
 /* implementation */
 
+function handle<AppState, Event>(
+  eventType: Class<Event>,
+  handler: Handler<AppState, Event>
+): [Class<Event>, Handler<AppState, Event>] {
+  return [eventType, handler]
+}
+
+function include<TopAppState, NestedAppState>(
+  app: App<NestedAppState>,
+  lens: Lens_<TopAppState, NestedAppState>
+): [App<NestedAppState>, Lens_<TopAppState, NestedAppState>] {
+  return [app, lens]
+}
+
 class App<AppState> {
   state: Property<AppState>;
   currentState: AppState;
@@ -60,7 +67,12 @@ class App<AppState> {
   _emitter: Emitter<Object>;
   _handlers: [Class<any>, Handler<AppState, any>][];
 
-  constructor(handlers: Handlers<AppState>, initialState: AppState) {
+  constructor(opts: {
+    initialState: AppState,
+    handlers?: Handlers<AppState>,
+    withApps?: WithApps<AppState>,
+  }) {
+    const { initialState, handlers, withApps } = opts
     this.currentState = initialState
     const input = Kefir.stream(emitter => {
       this._emitter = emitter
@@ -69,7 +81,7 @@ class App<AppState> {
     output.onValue(_ => {})  // force observables to activate
     this.state = output
     this._input = input
-    this._handlers = Array.from(handlers)
+    this._handlers = handlers ? Array.from(handlers) : []
 
     // special event handlers
     this._handlers.push(
@@ -118,6 +130,7 @@ export {
   asyncUpdate,
   emit,
   handle,
+  include,
   update,
   updateAndEmit,
 }

@@ -5,7 +5,7 @@ import { handle, update, updateAndEmit } from '../../src/sunshine'
 import { set } from '../util'
 
 function PasswordApp(state: $Shape<AppState>): Sunshine.App<AppState> {
-  const app = new Sunshine.App(handlers, set(initialState, state))
+  const app = new Sunshine.App({ handlers, initialState: set(initialState, state) })
 
   // simulation of a UI component
   app.state.onValue(state => {
@@ -70,6 +70,8 @@ function promptForPassword(): Promise<string> {
 
 export {
   PasswordApp,
+  ProvidePassword,
+  RequestPassword,
   handlers,
   promptForPassword,
 }

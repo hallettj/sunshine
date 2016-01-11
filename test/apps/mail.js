@@ -5,7 +5,7 @@ import { emit, handle, updateAndEmit } from '../../src/sunshine'
 import { set } from '../util'
 
 function MailApp(state: $Shape<AppState>): Sunshine.App<AppState> {
-  return new Sunshine.App(handlers, set(initialState, state))
+  return new Sunshine.App({ handlers, initialState: set(initialState, state) })
 }
 
 
