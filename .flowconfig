@@ -4,7 +4,6 @@
 [include]
 
 [libs]
-./internal_types/
-./node_modules/safety-lens/types/
+./types/
 
 [options]
