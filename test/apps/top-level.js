@@ -1,37 +1,41 @@
 /* @flow */
 
 import * as Sunshine from '../../src/sunshine'
-import { handle, emit } from '../../src/sunshine'
-import { set } from '../util'
+import { emit, include, reduce } from '../../src/sunshine'
 
-import { MailApp, GetAuthToken, SetAuthToken } from './mail'
-import { PasswordApp, ProvidePassword, RequestPassword } from './password'
+import { prop } from 'safety-lens/es2015'
 
-function TopLevelApp(state: $Shape<AppState>): Sunshine.App<AppState> {
-  return new Sunshine.App({ handlers, withApps, initialState: set(initialState, state) })
-}
+import * as Mail     from './mail'
+import * as Password from './password'
 
 
 // state
 
-type AppState = {}
-const initialState = {}
+export type AppState = {
+  mail: typeof Mail.App.initialState,
+  pass: typeof Password.App.initialState,
+}
 
-// nested apps
+const initialState = {
+  mail: Mail.App.initialState,
+  pass: Password.App.initialState,
+}
 
-const withApps = []
 
+// app
 
-// event handlers
+const topLevelApp =
+  new Sunshine.App(initialState)
+  .include(
+    include(Mail.App, prop('mail')),
+    include(Password.App, prop('password'))
+  )
+  .onEvent(
+    reduce(Mail.GetAuthToken, (state, _) => emit(new Password.RequestPassword)),
+    reduce(Password.ProvidePassword, (state, { pass }) => emit(new Mail.SetAuthToken(pass)))
+  )
 
-const handlers: Sunshine.Handlers<AppState> = [
-
-  handle(GetAuthToken, (state, _) => emit(new RequestPassword)),
-
-  handle(ProvidePassword, (state, { pass }) => emit(new SetAuthToken(pass))),
-
-]
 
 export {
-  TopLevelApp,
+  topLevelApp as App,
 }

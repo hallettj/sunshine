@@ -1,17 +1,12 @@
 /* @flow */
 
 import * as Sunshine from '../../src/sunshine'
-import { emit, handle, updateAndEmit } from '../../src/sunshine'
+import { emit, reduce, updateAndEmit } from '../../src/sunshine'
 import { set } from '../util'
-
-function MailApp(state: $Shape<AppState>): Sunshine.App<AppState> {
-  return new Sunshine.App({ handlers, initialState: set(initialState, state) })
-}
-
 
 // state
 
-type AppState = {
+export type AppState = {
   authToken?: string,
   messages: Message[],
   pendingQueries: string[],
@@ -30,7 +25,7 @@ const initialState: AppState = {
 
 // events
 
-class GetAuthToken {}  // intended to be handled upstream
+class GetAuthToken {}  // intended to be reduced upstream
 
 class GetMessages {
   query: string;
@@ -43,18 +38,18 @@ class SetAuthToken {
 }
 
 
-// event handlers
+// event reducers
 
-const handlers: Sunshine.Handlers<AppState> = [
+const reducers: Sunshine.Reducers<AppState> = [
 
-  handle(GetMessages, (state, { query }) => {
+  reduce(GetMessages, (state, { query }) => {
     const newState = set(state, {
       pendingQueries: state.pendingQueries.concat(query)
     })
     return updateAndEmit(newState, new RunQueries)
   }),
 
-  handle(RunQueries, (state, _) => {
+  reduce(RunQueries, (state, _) => {
     const { pendingQueries, authToken } = state
     if (authToken) {
       const newState = set(state, { pendingQueries: [] })
@@ -76,11 +71,16 @@ const handlers: Sunshine.Handlers<AppState> = [
     }
   }),
 
-  handle(SetAuthToken, (state, { authToken }) => {
+  reduce(SetAuthToken, (state, { authToken }) => {
     const newState = set(state, { authToken })
     return updateAndEmit(newState, new RunQueries)
   }),
 ]
+
+
+// app
+
+const mailApp = new Sunshine.App(initialState, reducers)
 
 
 // stubs
@@ -94,15 +94,13 @@ function fetch(query: string, authToken: string): Promise<Message[]> {
   return Promise.resolve(fixtureMessages)
 }
 
-
-
 export {
-  MailApp,
+  mailApp as App,
   GetAuthToken,
   GetMessages,
   RunQueries,
   SetAuthToken,
-  handlers,
+  reducers,
   fetch,
   fixtureMessages,
 }

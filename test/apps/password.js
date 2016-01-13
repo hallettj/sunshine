@@ -1,26 +1,16 @@
 /* @flow */
 
 import * as Sunshine from '../../src/sunshine'
-import { handle, update, updateAndEmit } from '../../src/sunshine'
+import { reduce, update, updateAndEmit } from '../../src/sunshine'
 import { set } from '../util'
 
-function PasswordApp(state: $Shape<AppState>): Sunshine.App<AppState> {
-  const app = new Sunshine.App({ handlers, initialState: set(initialState, state) })
+import { get } from 'safety-lens/lens'
 
-  // simulation of a UI component
-  app.state.onValue(state => {
-    if (state.requestPassword) {
-      promptForPassword().then(pass => app.emit(new GotPassword(pass)))
-    }
-  })
-
-  return app
-}
-
+import type { Getter } from 'safety-lens/lens'
 
 // state
 
-type AppState = {
+export type AppState = {
   requestPassword: boolean,
 }
 
@@ -38,28 +28,42 @@ class GotPassword {
   constructor(pass: string) { this.pass = pass }
 }
 
-// Redundant, but demonstrates separation between event handled internally that
-// updates internal state, and event that is intended to be handled upstream.
+// Redundant, but demonstrates separation between event reduced internally that
+// updates internal state, and event that is intended to be reduced upstream.
 class ProvidePassword {
   pass: string;
   constructor(pass: string) { this.pass = pass }
 }
 
 
-// event handlers
+// event reducers
 
-const handlers: Sunshine.Handlers<AppState> = [
+const reducers: Sunshine.Reducers<AppState> = [
 
-  handle(RequestPassword, (state, _) => update(
+  reduce(RequestPassword, (state, _) => update(
     set(state, { requestPassword: true })
   )),
 
-  handle(GotPassword, (state, { pass }) => updateAndEmit(
+  reduce(GotPassword, (state, { pass }) => updateAndEmit(
     set(state, { requestPassword: false }),
     new ProvidePassword(pass)
   )),
 
 ]
+
+
+// app
+const PasswordApp = new Sunshine.App(initialState, reducers)
+
+// simulation of a UI component
+function runUi<T>(session: Sunshine.Session<T>, lens: Getter<T,AppState>) {
+  session.state.onValue(state => {
+    const passState = get(lens, state)
+    if (passState.requestPassword) {
+      promptForPassword().then(pass => session.emit(new GotPassword(pass)))
+    }
+  })
+}
 
 
 // stubs
@@ -69,9 +73,10 @@ function promptForPassword(): Promise<string> {
 }
 
 export {
-  PasswordApp,
+  PasswordApp as App,
   ProvidePassword,
   RequestPassword,
-  handlers,
   promptForPassword,
+  reducers,
+  runUi,
 }

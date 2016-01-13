@@ -10,13 +10,15 @@ export type Handler<AppState, Event> = (s: AppState, e: Event) => AppState
 
 type AppStateStandin = Object
 type Context<AppState> = {
-  _sunshineApp: Sunshine.App<AppState>
+  _sunshineApp?: Sunshine.App<AppState>,
+  _sunshineLens?: Lens_<AppState1,AppState2>,
 }
 
 export class Component<DefProps,Props,ComponentState:Object> extends
                                 React.Component<DefProps,Props,ComponentState> {
-  context:        $Subtype<Context<AppStateStandin>>;
+  context:        $Shape<Context<AppStateStandin>>;
   state:          ComponentState;
+  _app:           ?Sunshine._App<AppStateStandin>;
   _hasState:      boolean;
   _changes:       ?Stream<AppStateStandin>;
   _onStateChange: ?((_: AppStateStandin) => void);
@@ -25,10 +27,11 @@ export class Component<DefProps,Props,ComponentState:Object> extends
     super(props, context)
 
     // Set initial state
-    var app = this._app()
-    var initState = app ? app.currentState : null
-    var state = initState ? this.getState(initState) : null
+    const app = getApp(this)
+    const initState = app ? app.currentState : null
+    const state = initState ? this.getState(withLens(initState, getLens(this))) : null
     this._hasState = Boolean(state)
+    this._app = app
     if (state) {
       this.state = state
     }
@@ -38,7 +41,7 @@ export class Component<DefProps,Props,ComponentState:Object> extends
   getState(appState: AppStateStandin): ?ComponentState {}
 
   emit<Event: Object>(event: Event) {
-    var app = this._app()
+    const app = this._app
     if (app) {
       app.emit(event)
     }
@@ -47,21 +50,23 @@ export class Component<DefProps,Props,ComponentState:Object> extends
     }
   }
 
-  _app(): ?Sunshine.App<AppStateStandin> {
-    return this.context._sunshineApp || this.props.app
+  _getApp(): ?Sunshine._App<AppStateStandin> {
+    return this.context._sunshineApp || (
+      this.props.app && this.props.app.run()
+    )
   }
 
   getChildContext(): Context<AppStateStandin> {
-    return { _sunshineApp: (this._app(): any) }
+    return { _sunshineApp: this._app, _sunshineLens: getLens(this) }
   }
 
   componentDidMount() {
     if (this._hasState) {
       this._onStateChange = appState => {
-        var componentState = this.getState(appState)
+        const componentState = this.getState(withLens(appState, getLens(this)))
         if (componentState) { this.setState(componentState) }
       }
-      var app = this._app()
+      var app = this._app
       if (app) {
         var changes = app.state.changes()
         changes.onValue(this._onStateChange)

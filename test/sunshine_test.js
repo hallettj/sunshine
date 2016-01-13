@@ -2,13 +2,8 @@
 
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import {
-  MailApp,
-  GetAuthToken,
-  GetMessages,
-  SetAuthToken,
-  fixtureMessages,
-} from './apps/mail'
+import * as Mail from './apps/mail'
+import * as TopLevel from './apps/top-level'
 
 const expect = chai.expect
 chai.use(chaiAsPromised)
@@ -19,9 +14,9 @@ describe('sunshine', function() {
   this.timeout(100)
 
   it('queues requests for messages', function() {
-    const app = MailApp()
-    app.emit(new GetMessages('from:Alice'))
-    const pending = app.state.filter(
+    const session = Mail.App.run()
+    session.emit(new Mail.GetMessages('from:Alice'))
+    const pending = session.state.filter(
       state => state.pendingQueries.length > 0
     )
     .map(state => state.pendingQueries)
@@ -31,28 +26,28 @@ describe('sunshine', function() {
   })
 
   it('emits request for authentication token', function(done) {
-    const app = MailApp()
-    app.emit(new GetMessages('from:Alice'))
-    app._input.onValue(event => {
-      if (event instanceof GetAuthToken) {
+    const session = Mail.App.run()
+    session.emit(new Mail.GetMessages('from:Alice'))
+    session.events.onValue(event => {
+      if (event instanceof Mail.GetAuthToken) {
         done()
       }
     })
   })
 
   it('updates asynchronously', function(done) {
-    const app = MailApp()
-    app.emit(new GetMessages('from:Alice'))
+    const session = Mail.App.run()
+    session.emit(new Mail.GetMessages('from:Alice'))
 
-    app._input.onValue(event => {
-      if (event instanceof GetAuthToken) {
-        app.emit(new SetAuthToken('hunter2'))
+    session.events.onValue(event => {
+      if (event instanceof Mail.GetAuthToken) {
+        session.emit(new Mail.SetAuthToken('hunter2'))
       }
     })
 
-    app.state.onValue(({ messages, pendingQueries, authToken }) => {
+    session.state.onValue(({ messages, pendingQueries, authToken }) => {
       if (messages.length > 0) {
-        expect(messages).to.deep.equal(fixtureMessages)
+        expect(messages).to.deep.equal(Mail.fixtureMessages)
         expect(pendingQueries).to.be.empty
         expect(authToken).to.equal('hunter2')
         done()
