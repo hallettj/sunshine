@@ -129,18 +129,18 @@ class Session<State> {
     this.state = output
     this.events = input
     this._includes = includes
-    this._reducers = reducers
     this.currentState = initialState
 
     // special event reducers
-    this._reducers.push(
+    this._reducers = reducers.concat([
       reduce(AsyncUpdate, (state, { updater, lens }) => {
         const newValue = updater(get(lens, state))
         return update(
           set(lens, newValue, state)
         )
       })
-    )
+    ])
+    Object.freeze(this._reducers)
 
     output.onValue(noop)  // force observables to activate
   }
