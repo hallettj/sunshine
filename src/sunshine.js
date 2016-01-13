@@ -6,16 +6,16 @@ import { id, get, set } from 'safety-lens/lens'
 import type { Emitter, Property, Stream } from 'kefir'
 import type { Lens_ } from 'safety-lens/lens'
 
-export type Reducer_<AppState, Event> = (s: AppState, e: Event) => ?EventResult<AppState>
-export type Reducer<AppState, Event> = [Class<Event>, Reducer_<AppState, Event>]
-export type Reducers<AppState> = Iterable<Reducer<AppState, any>>
+export type Reducer_<State, Event> = (s: State, e: Event) => ?EventResult<State>
+export type Reducer<State, Event> = [Class<Event>, Reducer_<State, Event>]
+export type Reducers<State> = Iterable<Reducer<State, any>>
 
-export type Include<AppState, NestedState> = [App<NestedState>, Lens_<AppState, NestedState>]
-export type Includes<AppState> = Iterable<Include<AppState, any>>
+export type Include<State, NestedState> = [App<NestedState>, Lens_<State, NestedState>]
+export type Includes<State> = Iterable<Include<State, any>>
 
-export type EventResult<AppState> = {
-  state?: AppState,
-  asyncUpdate?: Promise<Updater<AppState>>,
+export type EventResult<State> = {
+  state?: State,
+  asyncUpdate?: Promise<Updater<State>>,
   events?: Iterable<Object>,
 }
 
@@ -24,15 +24,15 @@ export type EventResult<AppState> = {
  * An `App` instance describes how a Sunshine app is initialized and functions.
  * More specifically, an `App` is a factory for `Session` instances.
  */
-class App<AppState> {
-  initialState: AppState;
-  reducers: Reducer<AppState, any>[];
-  includes: Include<AppState, any>[];
+class App<State> {
+  initialState: State;
+  reducers: Reducer<State, any>[];
+  includes: Include<State, any>[];
 
   constructor(
-    initialState: AppState,
-    reducers: Iterable<Reducer<AppState, any>> = [],
-    includes: Iterable<Include<AppState, any>> = [],
+    initialState: State,
+    reducers: Reducers<State> = [],
+    includes: Includes<State> = [],
   ) {
     this.initialState = initialState
     this.reducers = Array.from(reducers)
@@ -42,15 +42,15 @@ class App<AppState> {
     Object.freeze(this.includes)
   }
 
-  onEvent(...reducers: Reducer<AppState, any>[]): App<AppState> {
+  onEvent(...reducers: Reducer<State, any>[]): App<State> {
     return new App(this.initialState, this.reducers.concat(reducers), this.includes)
   }
 
-  include(...includes: Include<AppState, any>[]): App<AppState> {
+  include(...includes: Include<State, any>[]): App<State> {
     return new App(this.initialState, this.reducers, this.includes.concat(includes))
   }
 
-  run(): Session<AppState> {
+  run(): Session<State> {
     const { initialState, reducers, includes } = this
     return new Session(initialState, reducers, includes)
   }
@@ -59,17 +59,17 @@ class App<AppState> {
 
 /* helpers for building reducers and includes */
 
-function reduce<AppState, Event>(
+function reduce<State, Event>(
   eventType: Class<Event>,
-  reducer: Reducer_<AppState, Event>
-): Reducer<AppState, Event> {
+  reducer: Reducer_<State, Event>
+): Reducer<State, Event> {
   return [eventType, reducer]
 }
 
-function include<TopAppState, NestedAppState>(
-  app: App<NestedAppState>,
-  lens: Lens_<TopAppState, NestedAppState>
-): Include<TopAppState, NestedAppState> {
+function include<TopState, NestedState>(
+  app: App<NestedState>,
+  lens: Lens_<TopState, NestedState>
+): Include<TopState, NestedState> {
   return [app, lens]
 }
 
@@ -80,22 +80,22 @@ function emit<T>(...events: Object[]): EventResult<T> {
   return { events }
 }
 
-function update<AppState>(newState: AppState): EventResult<AppState> {
+function update<State>(newState: State): EventResult<State> {
   return { state: newState }
 }
 
-function updateAndEmit<AppState>(newState: AppState, ...events: Object[]): EventResult<AppState> {
+function updateAndEmit<State>(newState: State, ...events: Object[]): EventResult<State> {
   return { state: newState, events }
 }
 
-function asyncUpdate<AppState>(asyncUpdate: Promise<Updater<AppState>>): EventResult<AppState> {
+function asyncUpdate<State>(asyncUpdate: Promise<Updater<State>>): EventResult<State> {
   return { asyncUpdate }
 }
 
 
 /* special event types */
 
-export type Updater<AppState> = (latestState: AppState) => AppState
+export type Updater<State> = (latestState: State) => State
 
 // intentionally not exported
 class AsyncUpdate<A,B> {
@@ -111,18 +111,18 @@ class AsyncUpdate<A,B> {
  * A `Session` instance represents a running app. It exposes state as a Kefir
  * `Property`, and accepts input events via an `emit` method.
  */
-class Session<AppState> {
-  state: Property<AppState>;
+class Session<State> {
+  state: Property<State>;
   events: Stream<Object>;
-  currentState: AppState;
+  currentState: State;
   _emitter: Emitter<Object>;
-  _reducers: Reducer<AppState,any>[];
-  _includes: Include<AppState,any>[];
+  _reducers: Reducer<State,any>[];
+  _includes: Include<State,any>[];
 
   constructor(
-    initialState: AppState,
-    reducers: Reducer<AppState, any>[],
-    includes: Include<AppState, any>[],
+    initialState: State,
+    reducers: Reducer<State, any>[],
+    includes: Include<State, any>[],
   ) {
     const input = Kefir.stream(emitter => { this._emitter = emitter })
     const output = input.scan(this._reduceAll.bind(this), initialState)
@@ -149,7 +149,7 @@ class Session<AppState> {
     setTimeout(() => this._emitter.emit(event), 0);
   }
 
-  _reduceAll(prevState: AppState, event: Object): AppState {
+  _reduceAll(prevState: State, event: Object): State {
     const nestedUpdates = this._includes.reduce(
       (state, [app, lens]) => {
         const prevNestedState = get(lens, prevState)
@@ -163,7 +163,7 @@ class Session<AppState> {
     return nextState;
   }
 
-  _reduce<T>(reducers: Reducer<T,any>[], lens: Lens_<AppState,T>, prevState: T, event: Object): T {
+  _reduce<T>(reducers: Reducer<T,any>[], lens: Lens_<State,T>, prevState: T, event: Object): T {
     const applicableReducers = reducers
     .filter(([klass, _]) => event instanceof klass)
     .map(([_, reducer]) => reducer)
@@ -175,7 +175,7 @@ class Session<AppState> {
     return nextState
   }
 
-  _applyResult<T>(lens: Lens_<AppState,T>, result: ?EventResult<T>, prevState: T): T {
+  _applyResult<T>(lens: Lens_<State,T>, result: ?EventResult<T>, prevState: T): T {
     if (!result) { return prevState }
     const { state, asyncUpdate, events } = result
     if (asyncUpdate) {
