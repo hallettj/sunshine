@@ -1,7 +1,7 @@
 /* @flow */
 
 import Kefir from 'kefir'
-import { id, get, set } from 'safety-lens/lens'
+import { get, set } from 'safety-lens/lens'
 
 import type { Emitter, Property, Stream } from 'kefir'
 import type { Lens_ } from 'safety-lens/lens'
@@ -101,7 +101,10 @@ export type Updater<State> = (latestState: State) => State
 class AsyncUpdate<A,B> {
   updater: Updater<B>;
   lens: Lens_<A,B>;
-  constructor(updater: Updater<B>, lens: Lens_<A,B>) { this.updater = updater }
+  constructor(updater: Updater<B>, lens: Lens_<A,B>) {
+    this.updater = updater
+    this.lens = lens
+  }
 }
 
 
@@ -196,6 +199,7 @@ class Session<State> {
 }
 
 function noop () {}
+function id<T>(x: T): T { return x }
 
 export {
   App,
