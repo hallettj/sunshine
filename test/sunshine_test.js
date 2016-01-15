@@ -2,7 +2,9 @@
 
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
+import { get } from 'safety-lens'
 import * as Mail from './apps/mail'
+import * as Password from './apps/password'
 import * as TopLevel from './apps/top-level'
 
 const expect = chai.expect
@@ -53,6 +55,21 @@ describe('sunshine', function() {
         done()
       }
     })
+  })
+
+  it('composes apps', function() {
+    const session = TopLevel.App.run()
+    Password.runUi(session, TopLevel.passState)
+    session.emit(new Mail.GetMessages('from:Alice'))
+
+    const authToken = session.state.filter(
+      state => !!get(TopLevel.mailState, state).authToken
+    )
+    .map(state => get(TopLevel.mailState, state).authToken)
+    .take(1)
+    .toPromise()
+
+    return expect(authToken).to.eventually.equal('hunter2')
   })
 
 })

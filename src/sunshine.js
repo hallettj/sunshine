@@ -1,10 +1,10 @@
 /* @flow */
 
 import Kefir from 'kefir'
-import { get, set } from 'safety-lens/lens'
+import { get, set } from 'safety-lens'
 
 import type { Emitter, Property, Stream } from 'kefir'
-import type { Lens_ } from 'safety-lens/lens'
+import type { Lens_ } from 'safety-lens'
 
 export type Reducer_<State, Event> = (s: State, e: Event) => ?EventResult<State>
 export type Reducer<State, Event> = [Class<Event>, Reducer_<State, Event>]
@@ -161,7 +161,8 @@ class Session<State> {
       },
       prevState
     )
-    const nextState = this._reduce(this._reducers, id, nestedUpdates, event)
+    const idLens: Lens_<State,State> = (id: any)
+    const nextState = this._reduce(this._reducers, idLens, nestedUpdates, event)
     this.currentState = nextState
     return nextState;
   }

@@ -22,7 +22,7 @@
     "immutable": "^3.7.4",
     "kefir": "^3.2.0",
     "react": "^0.13.3",
-    "safety-lens": "^1.0.2"
+    "safety-lens": "^1.1.1"
   },
   "devDependencies": {
     "babel": "^5.8.23",
