@@ -1,35 +1,37 @@
 /* @flow */
 
 import React from 'react'
+import { compose, get } from 'safety-lens'
 import * as Sunshine from './sunshine'
 
 import type { Property, Stream } from 'kefir';
+import type { Getter } from 'safety-lens'
 
 export { App } from './sunshine'
 export type Handler<AppState, Event> = (s: AppState, e: Event) => AppState
 
-type AppStateStandin = Object
-type Context<AppState> = {
-  _sunshineApp?: Sunshine.App<AppState>,
-  _sunshineLens?: Lens_<AppState1,AppState2>,
+type AppStateStandin = any
+type Context<AppState,FocusedState> = {
+  _sunshineApp?: Sunshine.Session<AppState>,
+  _sunshineLens?: Getter<AppState,FocusedState>,
 }
 
 export class Component<DefProps,Props,ComponentState:Object> extends
                                 React.Component<DefProps,Props,ComponentState> {
-  context:        $Shape<Context<AppStateStandin>>;
+  context:        $Shape<Context<AppStateStandin,AppStateStandin>>;
   state:          ComponentState;
-  _app:           ?Sunshine._App<AppStateStandin>;
+  _app:           ?Sunshine.Session<AppStateStandin>;
   _hasState:      boolean;
   _changes:       ?Stream<AppStateStandin>;
   _onStateChange: ?((_: AppStateStandin) => void);
 
-  constructor(props: Props, context: Context<AppStateStandin>) {
+  constructor(props: Props, context: Context<AppStateStandin,AppStateStandin>) {
     super(props, context)
 
     // Set initial state
     const app = getApp(this)
     const initState = app ? app.currentState : null
-    const state = initState ? this.getState(withLens(initState, getLens(this))) : null
+    const state = initState ? this.getState(get(getLens(this), initState)) : null
     this._hasState = Boolean(state)
     this._app = app
     if (state) {
@@ -50,20 +52,15 @@ export class Component<DefProps,Props,ComponentState:Object> extends
     }
   }
 
-  _getApp(): ?Sunshine._App<AppStateStandin> {
-    return this.context._sunshineApp || (
-      this.props.app && this.props.app.run()
-    )
-  }
-
-  getChildContext(): Context<AppStateStandin> {
-    return { _sunshineApp: this._app, _sunshineLens: getLens(this) }
+  getChildContext(): Context<AppStateStandin,AppStateStandin> {
+    return this._app ?
+      { _sunshineApp: this._app, _sunshineLens: getLens(this) } : {}
   }
 
   componentDidMount() {
     if (this._hasState) {
       this._onStateChange = appState => {
-        const componentState = this.getState(withLens(appState, getLens(this)))
+        const componentState = this.getState(get(getLens(this), appState))
         if (componentState) { this.setState(componentState) }
       }
       var app = this._app
@@ -85,9 +82,28 @@ export class Component<DefProps,Props,ComponentState:Object> extends
 // In development mode, React will not provide context values to a component
 // unless those values are declared with `contextTypes`.
 Component.contextTypes = {
-  _sunshineApp: React.PropTypes.instanceOf(Sunshine.App)
+  _sunshineApp: React.PropTypes.instanceOf(Sunshine.App),
+  _sunshineLens: React.PropTypes.func,
 }
 
 Component.childContextTypes = {
-  _sunshineApp: React.PropTypes.instanceOf(Sunshine.App).isRequired
+  _sunshineApp: React.PropTypes.instanceOf(Sunshine.App).isRequired,
+  _sunshineLens: React.PropTypes.func.isRequired,
+}
+
+function getApp<AppState>(component: Component<any,any,any>): ?Sunshine.Session<AppState> {
+  return component.context._sunshineApp || (
+    component.props.app && component.props.app.run()
+  )
+}
+
+function getLens<AppState,FocusedState>(component: Component<any,any,any>): Getter<AppState,FocusedState> {
+  const { focus } = component.props
+  const contextLens = component.context._sunshineLens
+  if (contextLens && focus) {
+    return compose(contextLens, focus)
+  }
+  else {
+    return focus || contextLens || (Sunshine.id: any);
+  }
 }

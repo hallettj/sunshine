@@ -207,6 +207,7 @@ export {
   Session,
   asyncUpdate,
   emit,
+  id,
   include,
   reduce,
   update,
