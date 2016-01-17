@@ -12,7 +12,7 @@ chai.use(chaiAsPromised)
 declare var describe;
 declare var it;
 
-describe('sunshine', function() {
+describe('sunshine-framework', function() {
   this.timeout(100)
 
   it('queues requests for messages', function() {

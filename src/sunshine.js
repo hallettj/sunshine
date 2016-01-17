@@ -32,7 +32,7 @@ class App<State> {
   constructor(
     initialState: State,
     reducers: Reducers<State> = [],
-    includes: Includes<State> = [],
+    includes: Includes<State> = []
   ) {
     this.initialState = initialState
     this.reducers = Array.from(reducers)
@@ -125,7 +125,7 @@ class Session<State> {
   constructor(
     initialState: State,
     reducers: Reducer<State, any>[],
-    includes: Include<State, any>[],
+    includes: Include<State, any>[]
   ) {
     const input = Kefir.stream(emitter => { this._emitter = emitter })
     const output = input.scan(this._reduceAll.bind(this), initialState)

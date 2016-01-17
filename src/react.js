@@ -25,8 +25,8 @@ export class Component<DefProps,Props,ComponentState:Object> extends
   _changes:       ?Stream<AppStateStandin>;
   _onStateChange: ?((_: AppStateStandin) => void);
 
-  constructor(props: Props, context: Context<AppStateStandin,AppStateStandin>) {
-    super(props, context)
+  constructor(props: Props, context: any, updater: any) {
+    super(props, context, updater)
 
     // Set initial state
     const app = getApp(this)
@@ -82,12 +82,12 @@ export class Component<DefProps,Props,ComponentState:Object> extends
 // In development mode, React will not provide context values to a component
 // unless those values are declared with `contextTypes`.
 Component.contextTypes = {
-  _sunshineApp: React.PropTypes.instanceOf(Sunshine.App),
+  _sunshineApp: React.PropTypes.instanceOf(Sunshine.Session),
   _sunshineLens: React.PropTypes.func,
 }
 
 Component.childContextTypes = {
-  _sunshineApp: React.PropTypes.instanceOf(Sunshine.App).isRequired,
+  _sunshineApp: React.PropTypes.instanceOf(Sunshine.Session).isRequired,
   _sunshineLens: React.PropTypes.func.isRequired,
 }
 

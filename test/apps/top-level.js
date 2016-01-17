@@ -1,7 +1,7 @@
 /* @flow */
 
-import * as Sunshine from '../../src/sunshine'
-import { emit, include, reduce } from '../../src/sunshine'
+import * as Sunshine from '../../sunshine'
+import { emit, include, reduce } from '../../sunshine'
 
 import { prop } from 'safety-lens/es2015'
 
@@ -34,11 +34,11 @@ const topLevelApp =
   new Sunshine.App(initialState)
   .include(
     include(Mail.App, mailState),
-    include(Password.App, passState),
+    include(Password.App, passState)
   )
   .onEvent(
     reduce(Mail.GetAuthToken, (state, _) => emit(new Password.RequestPassword)),
-    reduce(Password.ProvidePassword, (state, { pass }) => emit(new Mail.SetAuthToken(pass))),
+    reduce(Password.ProvidePassword, (state, { pass }) => emit(new Mail.SetAuthToken(pass)))
   )
 
 

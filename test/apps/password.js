@@ -1,7 +1,7 @@
 /* @flow */
 
-import * as Sunshine from '../../src/sunshine'
-import { reduce, update, updateAndEmit } from '../../src/sunshine'
+import * as Sunshine from '../../sunshine'
+import { reduce, update, updateAndEmit } from '../../sunshine'
 import { set } from '../util'
 
 import { get } from 'safety-lens/lens'

@@ -1,7 +1,7 @@
 /* @flow */
 
-import * as Sunshine from '../../src/sunshine'
-import { emit, reduce, updateAndEmit } from '../../src/sunshine'
+import * as Sunshine from '../../sunshine'
+import { emit, reduce, updateAndEmit } from '../../sunshine'
 import { set } from '../util'
 
 // state
@@ -12,7 +12,7 @@ export type AppState = {
   pendingQueries: string[],
 }
 
-type Message = {
+export type Message = {
   from: string,
   body: string,
 }
