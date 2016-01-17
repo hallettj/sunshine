@@ -16,9 +16,14 @@ export type Includes<State> = Iterable<Include<State, any>>
 
 export type EventResult<State> = {
   state?: State,
-  updater?: (_: State) => State,  // for async updates
   events?: Iterable<Object>,
-  async?: Promise<EventResult<State>>,
+  asyncResult?: Promise<AsyncEventResult<State>>,
+}
+
+export type AsyncEventResult<State> = {
+  updater?: (_: State) => State,
+  events?: Iterable<Object>,
+  asyncResult?: Promise<AsyncEventResult<State>>,
 }
 
 
@@ -76,9 +81,9 @@ function include<TopState, SubState>(
 }
 
 
-/* helper functions for building EventResult<T> values */
+/* helper functions for building EventResult<T> and AsyncEventResult<T> values */
 
-function emit<T>(...events: Object[]): EventResult<T> {
+function emit<T>(...events: Object[]): EventResult<T> & AsyncEventResult<T> {
   return { events }
 }
 
@@ -90,11 +95,13 @@ function updateAndEmit<State>(newState: State, ...events: Object[]): EventResult
   return { state: newState, events }
 }
 
-function asyncResult<State>(asyncResult: Promise<EventResult<State>>): EventResult<State> {
-  return { async: asyncResult }
+function asyncResult<State>(
+  asyncResult: Promise<AsyncEventResult<State>>
+): EventResult<State> & AsyncEventResult<State> {
+  return { asyncResult }
 }
 
-function asyncUpdate<State>(updater: (_: State) => State): EventResult<State> {
+function asyncUpdate<State>(updater: (_: State) => State): AsyncEventResult<State> {
   return { updater }
 }
 
@@ -104,10 +111,12 @@ function asyncUpdate<State>(updater: (_: State) => State): EventResult<State> {
 export type Updater<State> = (latestState: State) => State
 
 // intentionally not exported
-class AsyncEventResult<T> {
-  result: EventResult<T>;
-  constructor(result: EventResult<T>) {
+class GotAsyncResult<State, SubState> {
+  result: AsyncEventResult<SubState>;
+  lens: Lens_<State, SubState>;
+  constructor(result: AsyncEventResult<SubState>, lens: Lens_<State, SubState>) {
     this.result = result
+    this.lens = lens
   }
 }
 
@@ -140,7 +149,12 @@ class Session<State> {
 
     // special event reducers
     this._reducers = reducers.concat([
-      reduce(AsyncEventResult, (state, { result }) => result)
+      reduce(GotAsyncResult, (state, { result, lens }) => {
+        const { updater, events, asyncResult } = result
+        const newSubState = updater && updater(get(lens, state))
+        const newState = newSubState ? set(lens, newSubState, state) : state
+        return { state: newState, events, asyncResult }
+      })
     ])
     Object.freeze(this._reducers)
 
@@ -180,10 +194,10 @@ class Session<State> {
 
   _applyResult<T>(lens: Lens_<State,T>, result: ?EventResult<T>, prevState: T): T {
     if (!result) { return prevState }
-    const { state, updater, events, async } = result
-    if (async) {
-      async.then(
-        asyncResult => { this.emit(this._buildAsyncResult(lens, asyncResult)) },
+    const { state, events, asyncResult } = result
+    if (asyncResult) {
+      asyncResult.then(
+        res => { this.emit(new GotAsyncResult(res, lens)) },
         this._emitter.error
       )
     }
@@ -192,27 +206,7 @@ class Session<State> {
         this.emit(event)
       }
     }
-    if (updater) {
-      return updater(prevState)
-    }
-    else {
-      return state || prevState
-    }
-  }
-
-  _buildAsyncResult<T>(lens: Lens_<State,T>, result: EventResult<T>): AsyncEventResult<State> {
-    const resultUpdater = result.updater
-    const resultState = result.state
-    let updater
-    // Apply lens to given updater or state, in case async result came from
-    // a sub-app reducer.
-    if (resultUpdater) {
-      updater = state => resultUpdater(get(lens, state))
-    }
-    else if (resultState) {
-      updater = state => set(lens, resultState, state)
-    }
-    return new AsyncEventResult(set(prop('updater'), updater, result))
+    return state || prevState
   }
 }
 

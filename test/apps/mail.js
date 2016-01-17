@@ -60,7 +60,7 @@ const reducers: Sunshine.Reducers<AppState> = [
       .then(ms => state => set(state, { messages: ms }))
       return {
         state: newState,
-        async: messages.then(asyncUpdate),
+        asyncResult: messages.then(asyncUpdate),
       }
     }
     else {
