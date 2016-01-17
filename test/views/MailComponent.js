@@ -5,14 +5,12 @@ import ReactDOM from 'react-dom'
 import * as Sunshine from '../../react'
 import * as Mail from '../apps/mail'
 
-import type { AppState, Message } from '../apps/mail'
-
 type State = {
-  messages: Message[],
+  messages: Mail.Message[],
 }
 
 export default class MailComponent extends Sunshine.Component<{},{},State> {
-  getState({ messages }: AppState): State {
+  getState({ messages }: Mail.AppState): State {
     return { messages }
   }
 
@@ -30,10 +28,10 @@ export default class MailComponent extends Sunshine.Component<{},{},State> {
       </div>
     ))
     return <div>
-      <input type="text" ref="query" id="query" />
-      <button onClick={this.onLoadMessages.bind(this)}>
-        Load Messages
-      </button>
+      <form className="queryForm" onSubmit={this.onLoadMessages.bind(this)}>
+        <input type="text" ref="query" id="query" />
+        <input type="submit" value="Load Messages" />
+      </form>
       <div className="messages">{messages}</div>
     </div>
   }
