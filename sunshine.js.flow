@@ -10,7 +10,7 @@ export type Reducer_<State, Event> = (s: State, e: Event) => ?EventResult<State>
 export type Reducer<State, Event> = [Class<Event>, Reducer_<State, Event>]
 export type Reducers<State> = Iterable<Reducer<State, any>>
 
-export type Include<State, NestedState> = [App<NestedState>, Lens_<State, NestedState>]
+export type Include<State, SubState> = [App<SubState>, Lens_<State, SubState>]
 export type Includes<State> = Iterable<Include<State, any>>
 
 export type EventResult<State> = {
@@ -66,10 +66,10 @@ function reduce<State, Event>(
   return [eventType, reducer]
 }
 
-function include<TopState, NestedState>(
-  app: App<NestedState>,
-  lens: Lens_<TopState, NestedState>
-): Include<TopState, NestedState> {
+function include<TopState, SubState>(
+  app: App<SubState>,
+  lens: Lens_<TopState, SubState>
+): Include<TopState, SubState> {
   return [app, lens]
 }
 
@@ -153,16 +153,16 @@ class Session<State> {
   }
 
   _reduceAll(prevState: State, event: Object): State {
-    const nestedUpdates = this._includes.reduce(
+    const substateUpdates = this._includes.reduce(
       (state, [app, lens]) => {
-        const prevNestedState = get(lens, prevState)
-        const nextNestedState = this._reduce(app.reducers, lens, prevNestedState, event)
-        return set(lens, nextNestedState, state)
+        const prevSubState = get(lens, prevState)
+        const nextSubState = this._reduce(app.reducers, lens, prevSubState, event)
+        return set(lens, nextSubState, state)
       },
       prevState
     )
     const idLens: Lens_<State,State> = (id: any)
-    const nextState = this._reduce(this._reducers, idLens, nestedUpdates, event)
+    const nextState = this._reduce(this._reducers, idLens, substateUpdates, event)
     this.currentState = nextState
     return nextState;
   }
