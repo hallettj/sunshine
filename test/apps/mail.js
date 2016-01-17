@@ -64,10 +64,7 @@ const reducers: Sunshine.Reducers<AppState> = [
       }
     }
     else {
-      return emit(new GetAuthToken/*, new RunQueries */)
-      // TODO: can we hook in a callback that runs after GetAuthToken updates
-      // state?
-      // Alternatively, create separate SetAuthToken event type
+      return emit(new GetAuthToken)
     }
   }),
 

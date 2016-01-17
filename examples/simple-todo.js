@@ -1,32 +1,28 @@
 /* @flow */
 
-import * as Sunshine from '../react'
-import { List, Record, is } from 'immutable'
-import { compose, filtering, get, getter, over, set } from 'safety-lens'
-import { field, toListOf, traverse } from 'safety-lens/immutable'
-import type { Getter, Lens_, Traversal_ } from 'safety-lens'
 import React from 'react'
+import ReactDOM from 'react-dom'
+import { asyncResult, emit, reduce, update } from '../sunshine'
+import * as Sunshine from '../react'
+import { get, over, set } from 'safety-lens'
+import { prop } from 'safety-lens/es2015'
+import { assert } from 'chai'
 
+import type { Lens_ } from 'safety-lens'
+import type { Reducers } from '../sunshine'
 
 // State
 
-type AppState = Record<{ todos: List<Todo> }>
-type Todo = Record<{
+export type AppState = {
+  todos: Todo[],
+}
+
+export type Todo = {
   title: string,
   completed: boolean,
-}>
+}
 
-// Initialize App
-
-var AppStateRecord = Record({ todos: List() })
-var TodoRecord = Record({
-  title: 'untitled',
-  completed: false,
-})
-
-var initialState: AppState = new AppStateRecord()
-
-var app = new Sunshine.App(initialState)
+const initialState: AppState = { todos: [] }
 
 
 // Basic component
@@ -36,18 +32,18 @@ type Props = {
   app: Sunshine.App<AppState>,
   pageSize: number,
 }
-type ComponentState = { todos: List<Todo> }
+type ComponentState = { todos: Todo[] }
 
 class TodoApp extends Sunshine.Component<DefaultProps,Props,ComponentState> {
   getState(appState: AppState): ComponentState {
     return {
-      todos: get(todosPage(this.props.pageSize), appState)
+      todos: todosPage(this.props.pageSize, appState)
     }
   }
 
   render(): React.Element {
-    var todos = this.state.todos.map(todo => (
-      <li>{todo.title}</li>
+    const todos = this.state.todos.map((todo, idx) => (
+      <li key={idx}>{todo.title}</li>
     ))
     return (
       <div>
@@ -64,8 +60,7 @@ class TodoApp extends Sunshine.Component<DefaultProps,Props,ComponentState> {
 
   addTodo(event: Event) {
     event.preventDefault()
-    var input = React.findDOMNode(this.refs.title)
-    var title = input.value
+    const title = this.refs.title.value
     this.emit(new AddTodoEvent(title))
   }
 }
@@ -73,73 +68,44 @@ class TodoApp extends Sunshine.Component<DefaultProps,Props,ComponentState> {
 
 // Lenses
 
-var todosLens: Lens_<AppState,List<Todo>> = field('todos')
+const todosLens: Lens_<AppState,Todo[]> = prop('todos')
 
-var activeTodos: Traversal_<AppState,Todo> =
-  compose(todosLens, compose(traverse, filtering(todo => !todo.completed)))
-
-function todosPage(pageSize: number): Getter<AppState,List<Todo>> {
-  return getter(state => toListOf(activeTodos, state).slice(0, pageSize))
+function todosPage(pageSize: number, state: AppState): Todo[] {
+  const todos = get(todosLens, state)
+  return todos.filter(todo => !todo.completed).slice(0, pageSize)
 }
 
 
 // Demonstrating lenses
 
 // reading todos
-var todos = get(todosLens, initialState)
-assertEqual(todos, List())
+const todos = get(todosLens, initialState)
+assert.deepEqual(todos, [])
 
 // setting todos;
 // `newState` is a new object with the new todos list. `initialState` is not modified.
-var newState = set(todosLens, List([
-  new TodoRecord({ title: 'add todo', completed: true })
-]), initialState)
+const newState = set(todosLens, [
+  { title: 'add todo', completed: true }
+], initialState)
 
-assertEqual(newState, new AppStateRecord({
-  todos: List([
-    new TodoRecord({
-      title: 'add todo',
-      completed: true
-    })
-  ])
-}))
+assert.deepEqual(newState, {
+  todos: [
+    { title: 'add todo', completed: true }
+  ]
+})
 
 // modifying todos without replacing the whole list
-var newnewState = over(todosLens, todos => todos.push(new TodoRecord({
+const newnewState = over(todosLens, todos => todos.concat({
   title: 'append a todo',
   completed: false,
-})), newState)
+}), newState)
 
-assertEqual(newnewState, new AppStateRecord({
-  todos: List([
-    new TodoRecord({
-      title: 'add todo',
-      completed: true
-    }),
-    new TodoRecord({
-      title: 'append a todo',
-      completed: false,
-    })
-  ])
-}))
-
-// reading a page of active todos
-var pageLens = todosPage(5)
-var page = get(pageLens, newnewState)
-
-assertEqual(page, List([
-  new TodoRecord({
-    title: 'append a todo',
-    completed: false,
-  })
-]))
-
-function assertEqual(actual,expected) {
-  if (!is(actual,expected)) {
-    console.error("values are not equal", actual.toJS(), expected.toJS())
-    throw "assertion failure"
-  }
-}
+assert.deepEqual(newnewState, {
+  todos: [
+    { title: 'add todo', completed: true },
+    { title: 'append a todo', completed: false },
+  ]
+})
 
 
 // The Event type
@@ -152,63 +118,80 @@ class AddTodoEvent {
 }
 
 
-// Event handlers
+// Event reducers
 
-app.on(AddTodoEvent, (state, { title }) => {
-  return over(todosLens, todos => todos.concat({
-    title: title,
-    completed: false,
-  }), state)
-})
+const reducers: Reducers = [
+  reduce(AddTodoEvent, (state, { title }) => update(
+    over(todosLens, todos => todos.concat({
+      title: title,
+      completed: false,
+    }), state)
+  ))
+]
 
 
-// /* Other possible events */
 
-// import Promise from 'es6-promise'
-// Promise.polyfill()
+
+/* Other possible events */
 
 // import {} from 'whatwg-fetch'
-// // Tells Flow that `fetch` is a global function.
-// declare var fetch: Function;
+// Tells Flow that `fetch` is a global function.
+declare var fetch: Function;
 
 
-// class AddTodoWithAuthor {
-//   title: string;
-//   authorId: number;
-//   constructor(title: string, authorId: number) {
-//     this.title = title
-//     this.authorId = authorId
-//   }
-// }
+class AddTodoWithAuthor {
+  title: string;
+  authorId: number;
+  constructor(title: string, authorId: number) {
+    this.title = title
+    this.authorId = authorId
+  }
+}
 
-// class AppendTodo {
-//   todo: Todo;
-//   constructor(todo: Todo) {
-//     this.todo = todo
-//   }
-// }
+class AppendTodo {
+  todo: Todo;
+  constructor(todo: Todo) {
+    this.todo = todo
+  }
+}
 
-// app.on(AddTodoWithAuthor, (state, { title, authorId }) => {
-//   fetch(`/users/${authorId}`).then(response => {
-//     response.json().then(author => {
-//       var todo = {
-//         title,
-//         author,
-//         completed: false,
-//       }
-//       app.emit(new AppendTodo(todo))
-//     })
-//   })
-// })
+const otherPossibleReducers = [
+  reduce(AddTodoWithAuthor, (state, { title, authorId }) => asyncResult(
+    fetch(`/users/${authorId}`).then(response => {
+      return response.json().then(author => {
+        const todo = {
+          title,
+          author,
+          completed: false,
+        }
+        return emit(new AppendTodo(todo))
+      })
+    })
+  )),
 
-// app.on(AppendTodo, (state, { todo }) => {
-//   return todosLens.map(state, todos => todos.push(todo))
-// })
+  reduce(AppendTodo, (state, { todo }) => update(
+    over(todosLens, todos => todos.concat(todo), state)
+  )),
+]
+
+
+// Initialize App
+
+const app = new Sunshine.App(initialState, reducers)
 
 
 // Render the app
 
-React.render(
-  <TodoApp pageSize={10} app={app} />,
-  document.getElementById('app')
-)
+function toRender() {
+  ReactDOM.render(
+    <TodoApp pageSize={10} app={app} />,
+    document.getElementById('app')
+  )
+}
+
+export {
+  TodoApp,
+  initialState,
+  toRender,
+  app,
+}

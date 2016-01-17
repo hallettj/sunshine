@@ -15,6 +15,7 @@ import * as Password from './apps/password'
 import * as TopLevel from './apps/top-level'
 import MailComponent from './views/MailComponent'
 import TopLevelComponent from './views/TopLevelComponent'
+import * as Todo from '../examples/simple-todo'
 
 const expect = chai.expect
 chai.use(chaiAsPromised)
@@ -71,6 +72,28 @@ describe('sunshine-framework/react', function() {
       const msgBodies = T.scryRenderedDOMComponentsWithClass(detachedComp, 'body')
       expect(msgBodies).to.have.length(2)
       expect(msgBodies[0]).to.have.text('hi')
+      done()
+    }, 100)
+  })
+
+  it('runs a simple todo app', function(done) {
+    const pageSize = 3
+    const detachedComp = T.renderIntoDocument(
+      <Todo.TodoApp app={Todo.app} pageSize={pageSize} />
+    )
+
+    ;[1,2,3,4].forEach(n => {
+      const form = T.findRenderedDOMComponentWithTag(detachedComp, 'form')
+      const input = form.querySelector('[type="text"]')
+      expect(input).to.exist
+      input.value = `todo ${n}`
+      T.Simulate.submit(form)
+    })
+
+    setTimeout(() => {
+      const todos = T.scryRenderedDOMComponentsWithTag(detachedComp, 'li')
+      expect(todos).to.have.length(pageSize)
+      expect(todos[0]).to.have.text('todo 1')
       done()
     }, 100)
   })
