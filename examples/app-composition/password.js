@@ -1,8 +1,9 @@
 /* @flow */
 
+import { set } from 'safety-lens'
+import { prop } from 'safety-lens/es2015'
 import * as Sunshine from '../../sunshine'
 import { reduce, update, updateAndEmit } from '../../sunshine'
-import { set } from '../util'
 
 import { get } from 'safety-lens/lens'
 
@@ -41,11 +42,11 @@ class ProvidePassword {
 const reducers: Sunshine.Reducers<AppState> = [
 
   reduce(RequestPassword, (state, _) => update(
-    set(state, { requestPassword: true })
+    set(prop('requestPassword'), true, state)
   )),
 
   reduce(GotPassword, (state, { pass }) => updateAndEmit(
-    set(state, { requestPassword: false }),
+    set(prop('requestPassword'), false, state),
     new ProvidePassword(pass)
   )),
 
@@ -55,7 +56,7 @@ const reducers: Sunshine.Reducers<AppState> = [
 // app
 const PasswordApp = new Sunshine.App(initialState, reducers)
 
-// simulation of a UI component
+// Simulation of a UI component, for testing this app without React support.
 function runUi<T>(session: Sunshine.Session<T>, lens: Getter<T,AppState>) {
   session.state.onValue(state => {
     const passState = get(lens, state)

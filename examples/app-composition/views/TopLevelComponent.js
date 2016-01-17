@@ -2,8 +2,8 @@
 
 import React from 'react'
 import ReactDOM from 'react-dom'
-import * as Sunshine from '../../react'
-import { mailState, passState } from '../apps/top-level'
+import * as Sunshine from '../../../react'
+import { mailState, passState } from '../top-level'
 import MailComponent from './MailComponent'
 import PasswordComponent from './PasswordComponent'
 

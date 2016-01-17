@@ -10,12 +10,12 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import { get } from 'safety-lens'
 import { emit, reduce } from '../sunshine'
-import * as Mail from './apps/mail'
-import * as Password from './apps/password'
-import * as TopLevel from './apps/top-level'
-import MailComponent from './views/MailComponent'
-import TopLevelComponent from './views/TopLevelComponent'
 import * as Todo from '../examples/simple-todo'
+import * as Mail from '../examples/app-composition/mail'
+import * as Password from '../examples/app-composition/password'
+import * as TopLevel from '../examples/app-composition/top-level'
+import MailComponent from '../examples/app-composition/views/MailComponent'
+import TopLevelComponent from '../examples/app-composition/views/TopLevelComponent'
 
 const expect = chai.expect
 chai.use(chaiAsPromised)

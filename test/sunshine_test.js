@@ -3,9 +3,9 @@
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import { get } from 'safety-lens'
-import * as Mail from './apps/mail'
-import * as Password from './apps/password'
-import * as TopLevel from './apps/top-level'
+import * as Mail from '../examples/app-composition/mail'
+import * as Password from '../examples/app-composition/password'
+import * as TopLevel from '../examples/app-composition/top-level'
 
 const expect = chai.expect
 chai.use(chaiAsPromised)

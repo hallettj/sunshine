@@ -1,8 +1,9 @@
 /* @flow */
 
+import { set } from 'safety-lens'
+import { prop } from 'safety-lens/es2015'
 import * as Sunshine from '../../sunshine'
 import { asyncUpdate, emit, reduce, updateAndEmit } from '../../sunshine'
-import { set } from '../util'
 
 // state
 
@@ -43,21 +44,23 @@ class SetAuthToken {
 const reducers: Sunshine.Reducers<AppState> = [
 
   reduce(GetMessages, (state, { query }) => {
-    const newState = set(state, {
-      pendingQueries: state.pendingQueries.concat(query)
-    })
+    const newState = set(
+      prop('pendingQueries'),
+      state.pendingQueries.concat(query),
+      state
+    )
     return updateAndEmit(newState, new RunQueries)
   }),
 
   reduce(RunQueries, (state, _) => {
     const { pendingQueries, authToken } = state
     if (authToken) {
-      const newState = set(state, { pendingQueries: [] })
+      const newState = set(prop('pendingQueries'), [], state)
       const messages = Promise.all(
         pendingQueries.map(q => fetch(q, authToken))
       )
       .then(mss => Array.prototype.concat.apply([], mss))
-      .then(ms => state => set(state, { messages: ms }))
+      .then(ms => state => set(prop('messages'), ms, state))
       return {
         state: newState,
         asyncResult: messages.then(asyncUpdate),
@@ -69,7 +72,7 @@ const reducers: Sunshine.Reducers<AppState> = [
   }),
 
   reduce(SetAuthToken, (state, { authToken }) => {
-    const newState = set(state, { authToken })
+    const newState = set(prop('authToken'), authToken, state)
     return updateAndEmit(newState, new RunQueries)
   }),
 ]

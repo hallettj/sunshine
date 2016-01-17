@@ -2,8 +2,8 @@
 
 import React from 'react'
 import ReactDOM from 'react-dom'
-import * as Sunshine from '../../react'
-import * as Password from '../apps/password'
+import * as Sunshine from '../../../react'
+import * as Password from '../password'
 
 type State = {
   visible: boolean,

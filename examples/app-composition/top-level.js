@@ -42,6 +42,15 @@ const topLevelApp =
   )
 
 
+// Render the app
+
+function toRender(ReactDOM, Component /* e.g., from './views/TopLevelComponent' */) {
+  ReactDOM.render(
+    <Component app={topLevelApp} />,
+    document.getElementById('app')
+  )
+}
+
 export {
   topLevelApp as App,
   mailState,

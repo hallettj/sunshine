@@ -2,8 +2,8 @@
 
 import React from 'react'
 import ReactDOM from 'react-dom'
-import * as Sunshine from '../../react'
-import * as Mail from '../apps/mail'
+import * as Sunshine from '../../../react'
+import * as Mail from '../mail'
 
 type State = {
   messages: Mail.Message[],
