@@ -1,7 +1,7 @@
 /* @flow */
 
 import * as Sunshine from '../../sunshine'
-import { emit, reduce, updateAndEmit } from '../../sunshine'
+import { asyncUpdate, emit, reduce, updateAndEmit } from '../../sunshine'
 import { set } from '../util'
 
 // state
@@ -53,14 +53,14 @@ const reducers: Sunshine.Reducers<AppState> = [
     const { pendingQueries, authToken } = state
     if (authToken) {
       const newState = set(state, { pendingQueries: [] })
-      const asyncUpdate = Promise.all(
+      const messages = Promise.all(
         pendingQueries.map(q => fetch(q, authToken))
       )
       .then(mss => Array.prototype.concat.apply([], mss))
       .then(ms => state => set(state, { messages: ms }))
       return {
         state: newState,
-        asyncUpdate,
+        async: messages.then(asyncUpdate),
       }
     }
     else {
