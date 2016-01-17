@@ -23,8 +23,8 @@ export default class MailComponent extends Sunshine.Component<{},{},State> {
   }
 
   render(): ReactDOM.Element {
-    const messages = this.state.messages.map(({ from, body }) => (
-      <div className="message">
+    const messages = this.state.messages.map(({ from, body }, idx) => (
+      <div className="message" key={idx}>
         <span className="from">{from}</span>
         <span className="body">{body}</span>
       </div>
