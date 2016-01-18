@@ -2,7 +2,7 @@
 
 import React from 'react'
 import ReactDOM from 'react-dom'
-import { asyncResult, emit, reduce, update } from '../sunshine'
+import { asyncResult, asyncUpdate, emit, reduce, update } from '../sunshine'
 import * as Sunshine from '../react'
 import { get, over, set } from 'safety-lens'
 import { prop } from 'safety-lens/es2015'
@@ -155,23 +155,48 @@ class AppendTodo {
   }
 }
 
+class LoadTodos {}
+
 const otherPossibleReducers = [
+
+  // Example of emitting events after an asynchronous action
   reduce(AddTodoWithAuthor, (state, { title, authorId }) => asyncResult(
-    fetch(`/users/${authorId}`).then(response => {
-      return response.json().then(author => {
+    fetch(`/users/${authorId}`)
+    .then(response => response.json())
+    .then(author => {
         const todo = {
           title,
           author,
           completed: false,
         }
         return emit(new AppendTodo(todo))
-      })
     })
   )),
 
   reduce(AppendTodo, (state, { todo }) => update(
     over(todosLens, todos => todos.concat(todo), state)
   )),
+
+  // Example of updating state with the result of an asynchronous action
+  reduce(LoadTodos, (state, _) => asyncResult(
+    fetch('/todos')
+    .then(response => response.json())
+    .then(todos => asyncUpdate(
+      latestState => set(todosLens, todos, latestState)
+    ))
+  )),
+
+  // Alternatively, synchronously empty todos from state, asynchronously
+  // load new set via the same reducer
+  reduce(LoadTodos, (state, _) => ({
+    state: set(todosLens, [], state),  // synchronously empty todos list
+    asyncResult: fetch('/todos')
+      .then(response => response.json())
+      .then(todos => asyncUpdate(
+        latestState => set(todosLens, todos, latestState)  // asynchronously set new list
+      ))
+  })),
+
 ]
 
 
