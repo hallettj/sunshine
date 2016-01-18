@@ -17,7 +17,7 @@ export default class PasswordComponent extends Sunshine.Component<{},{},State> {
   onPassword(event: Event) {
     event.preventDefault()
     const pass = this.refs.passwordInput.value
-    this.emit(new Password.ProvidePassword(pass))
+    this.emit(new Password.GotPassword(pass))
   }
 
   render(): React.Element {

@@ -57,7 +57,7 @@ const reducers: Sunshine.Reducers<AppState> = [
     if (authToken) {
       const newState = set(prop('pendingQueries'), [], state)
       const messages = Promise.all(
-        pendingQueries.map(q => fetch(q, authToken))
+        pendingQueries.map(q => fetchMessages(q, authToken))
       )
       .then(mss => Array.prototype.concat.apply([], mss))
       .then(ms => state => set(prop('messages'), ms, state))
@@ -90,7 +90,7 @@ const fixtureMessages = [
   { from: 'Alice', body: '525f8e2858d56a93bca87dfb818d5bce98bef638' },
 ]
 
-function fetch(query: string, authToken: string): Promise<Message[]> {
+function fetchMessages(query: string, authToken: string): Promise<Message[]> {
   return Promise.resolve(fixtureMessages)
 }
 
@@ -101,6 +101,6 @@ export {
   RunQueries,
   SetAuthToken,
   reducers,
-  fetch,
+  fetchMessages,
   fixtureMessages,
 }

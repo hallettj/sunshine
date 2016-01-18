@@ -75,6 +75,7 @@ function promptForPassword(): Promise<string> {
 
 export {
   PasswordApp as App,
+  GotPassword,
   ProvidePassword,
   RequestPassword,
   promptForPassword,
