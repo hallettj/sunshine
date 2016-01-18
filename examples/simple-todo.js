@@ -120,7 +120,7 @@ class AddTodoEvent {
 
 // Event reducers
 
-const reducers: Reducers = [
+const reducers: Reducers<AppState> = [
   reduce(AddTodoEvent, (state, { title }) => update(
     over(todosLens, todos => todos.concat({
       title: title,
