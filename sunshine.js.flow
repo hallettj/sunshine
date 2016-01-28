@@ -1,6 +1,6 @@
 /* @flow */
 
-import Kefir from 'kefir'
+import * as Kefir from 'kefir'
 import { get, set } from 'safety-lens'
 import { prop } from 'safety-lens/es2015'
 
@@ -35,31 +35,39 @@ class App<State> {
   initialState: State;
   reducers: Reducer<State, any>[];
   includes: Include<State, any>[];
+  inputs: Stream<any>[];
 
   constructor(
     initialState: State,
     reducers: Reducers<State> = [],
-    includes: Includes<State> = []
+    includes: Includes<State> = [],
+    inputs: Iterable<Stream<any>> = []
   ) {
     this.initialState = initialState
     this.reducers = Array.from(reducers)
     this.includes = Array.from(includes)
+    this.inputs = Array.from(inputs)
     Object.freeze(this)
     Object.freeze(this.reducers)
     Object.freeze(this.includes)
+    Object.freeze(this.inputs)
   }
 
   onEvent(...reducers: Reducer<State, any>[]): App<State> {
-    return new App(this.initialState, this.reducers.concat(reducers), this.includes)
+    return new App(this.initialState, this.reducers.concat(reducers), this.includes, this.inputs)
   }
 
   include(...includes: Include<State, any>[]): App<State> {
-    return new App(this.initialState, this.reducers, this.includes.concat(includes))
+    return new App(this.initialState, this.reducers, this.includes.concat(includes), this.inputs)
+  }
+
+  input(...inputs: Stream<any>[]): App<State> {
+    return new App(this.initialState, this.reducers, this.includes, this.inputs.concat(inputs))
   }
 
   run(): Session<State> {
-    const { initialState, reducers, includes } = this
-    return new Session(initialState, reducers, includes)
+    const { initialState, reducers, includes, inputs } = this
+    return new Session(initialState, reducers, includes, inputs)
   }
 }
 
@@ -138,9 +146,11 @@ class Session<State> {
   constructor(
     initialState: State,
     reducers: Reducer<State, any>[],
-    includes: Include<State, any>[]
+    includes: Include<State, any>[],
+    inputs: Stream<any>[]
   ) {
-    const input = Kefir.stream(emitter => { this._emitter = emitter })
+    const stream = Kefir.stream(emitter => { this._emitter = emitter })
+    const input = Kefir.merge(inputs.concat(stream))
     const output = input.scan(this._reduceAll.bind(this), initialState)
     this.state = output
     this.events = input

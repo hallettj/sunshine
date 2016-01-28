@@ -6,6 +6,7 @@ import { get } from 'safety-lens'
 import * as Mail from '../examples/app-composition/mail'
 import * as Password from '../examples/app-composition/password'
 import * as TopLevel from '../examples/app-composition/top-level'
+import * as InputEvents from '../examples/input-events'
 
 const expect = chai.expect
 chai.use(chaiAsPromised)
@@ -70,6 +71,23 @@ describe('sunshine-framework', function() {
     .toPromise()
 
     return expect(authToken).to.eventually.equal('hunter2')
+  })
+
+  it('accepts input event streams', function() {
+    const session = InputEvents.App.run()
+    const rootView = new InputEvents.RootView
+    const discussionView = new InputEvents.DiscussionView
+
+    InputEvents.router.emit('route', rootView)
+    InputEvents.router.emit('route', discussionView)
+
+    const view = session.state.filter(
+      state => state.view instanceof InputEvents.DiscussionView
+    )
+    .map(state => state.view)
+    .take(1)
+    .toPromise()
+    return expect(view).to.eventually.equal(discussionView)
   })
 
 })
