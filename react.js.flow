@@ -7,7 +7,18 @@ import * as Sunshine from './sunshine'
 import type { Property, Stream } from 'kefir';
 import type { Getter } from 'safety-lens'
 
-export { App } from './sunshine'
+export {
+  App,
+  Session,
+  asyncResult,
+  asyncUpdate,
+  emit,
+  id,
+  include,
+  reduce,
+  update,
+  updateAndEmit,
+} from './sunshine'
 export type Handler<AppState, Event> = (s: AppState, e: Event) => AppState
 
 type AppStateStandin = any
