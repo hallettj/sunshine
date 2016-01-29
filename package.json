@@ -26,8 +26,10 @@
   "files": [
     "sunshine.js",
     "sunshine.js.flow",
+    "sunshine.js.map",
     "react.js",
-    "react.js.flow"
+    "react.js.flow",
+    "react.js.map"
   ],
   "dependencies": {
     "kefir": "^3.2.0",
