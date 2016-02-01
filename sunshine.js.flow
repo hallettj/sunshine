@@ -151,7 +151,9 @@ class Session<State> {
   ) {
     const stream = Kefir.stream(emitter => { this._emitter = emitter })
     const input = Kefir.merge(inputs.concat(stream))
-    const output = input.scan(this._reduceAll.bind(this), initialState)
+    const output = input.flatMapErrors(
+      e => Kefir.constant(e instanceof Error ? e : new Error(e))
+    ).scan(this._reduce.bind(this), initialState)
     this.state = output
     this.events = input
     this._includes = includes
