@@ -71,6 +71,8 @@ const reducers: Sunshine.Reducers<AppState> = [
     }
   }),
 
+  reduce(GetAuthToken, (state, _) => { /* handled upstream */ }),
+
   reduce(SetAuthToken, (state, { authToken }) => {
     const newState = set(prop('authToken'), authToken, state)
     return updateAndEmit(newState, new RunQueries)

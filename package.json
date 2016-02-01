@@ -32,6 +32,7 @@
     "react.js.map"
   ],
   "dependencies": {
+    "flatmap": ">=0.0.3",
     "kefir": "^3.2.0",
     "react": ">=0.14.0",
     "safety-lens": ">=1.2.0"

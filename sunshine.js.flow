@@ -3,6 +3,7 @@
 import * as Kefir from 'kefir'
 import { get, set } from 'safety-lens'
 import { prop } from 'safety-lens/es2015'
+import flatMap from 'flatmap'
 
 import type { Emitter, Property, Stream } from 'kefir'
 import type { Lens_ } from 'safety-lens'
@@ -177,30 +178,29 @@ class Session<State> {
     setTimeout(() => this._emitter.emit(event), 0);
   }
 
-  _reduceAll(prevState: State, event: Object): State {
-    const substateUpdates = this._includes.reduce(
-      (state, [app, lens]) => {
-        const prevSubState = get(lens, prevState)
-        const nextSubState = this._reduce(app.reducers, lens, prevSubState, event)
-        return set(lens, nextSubState, state)
-      },
-      prevState
-    )
+  _reduce(prevState: State, event: Object): State {
     const idLens: Lens_<State,State> = (id: any)
-    const nextState = this._reduce(this._reducers, idLens, substateUpdates, event)
-    this.currentState = nextState
-    return nextState;
-  }
-
-  _reduce<T>(reducers: Reducer<T,any>[], lens: Lens_<State,T>, prevState: T, event: Object): T {
-    const applicableReducers = reducers
-    .filter(([klass, _]) => event instanceof klass)
-    .map(([_, reducer]) => reducer)
-
-    const nextState = applicableReducers.reduce(
-      (state, reducer) => this._applyResult(lens, reducer(state, event), state),
-      prevState
+    const applicableReducers = flatMap(this._includes, ([app, lens]) => (
+      app.reducers
+      .filter(([klass, _]) => event.constructor === klass)
+      .map(([_, reducer]) => [reducer, lens])
+    ))
+    .concat(
+      this._reducers
+      .filter(([klass, _]) => event.constructor === klass)
+      .map(([_, reducer]) => [reducer, idLens])
     )
+
+    if (applicableReducers.length === 0) {
+      console.warn('Unhandled Sunshine event: ', event)
+    }
+
+    const nextState = applicableReducers.reduce((state, [reducer, lens]) => {
+      const substate  = get(lens, state)
+      const nextstate = this._applyResult(lens, reducer(substate, event), substate)
+      return set(lens, nextstate, state)
+    }, prevState)
+    this.currentState = nextState
     return nextState
   }
 
