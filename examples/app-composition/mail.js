@@ -3,7 +3,7 @@
 import { set } from 'safety-lens'
 import { prop } from 'safety-lens/es2015'
 import * as Sunshine from '../../sunshine'
-import { asyncUpdate, emit, reduce, updateAndEmit } from '../../sunshine'
+import { asyncUpdate, emit, noChange, reduce, updateAndEmit } from '../../sunshine'
 
 // state
 
@@ -71,7 +71,10 @@ const reducers: Sunshine.Reducers<AppState> = [
     }
   }),
 
-  reduce(GetAuthToken, (state, _) => { /* handled upstream */ }),
+  reduce(GetAuthToken, (state, _) => {
+    /* handled upstream */
+    return noChange
+  }),
 
   reduce(SetAuthToken, (state, { authToken }) => {
     const newState = set(prop('authToken'), authToken, state)

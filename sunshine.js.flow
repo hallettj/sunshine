@@ -8,7 +8,7 @@ import flatMap from 'flatmap'
 import type { Emitter, Property, Stream } from 'kefir'
 import type { Lens_ } from 'safety-lens'
 
-export type Reducer_<State, Event> = (s: State, e: Event) => ?EventResult<State>
+export type Reducer_<State, Event> = (s: State, e: Event) => EventResult<State>
 export type Reducer<State, Event> = [Class<Event>, Reducer_<State, Event>]
 export type Reducers<State> = Iterable<Reducer<State, any>>
 
@@ -114,6 +114,8 @@ function asyncUpdate<State>(updater: (_: State) => State): AsyncEventResult<Stat
   return { updater }
 }
 
+const noChange: EventResult<any> & AsyncEventResult<any> = {}
+
 
 /* special event types */
 
@@ -205,7 +207,9 @@ class Session<State> {
   }
 
   _applyResult<T>(lens: Lens_<State,T>, result: ?EventResult<T>, prevState: T): T {
-    if (!result) { return prevState }
+    // TODO: Include link in error message to wiki page explaining that event
+    // reducers are pure functions.
+    if (!result) { throw 'Every event reducer must return a value of type EventResult<T>.' }
     const { state, events, asyncResult } = result
     if (asyncResult) {
       asyncResult.then(
@@ -233,6 +237,7 @@ export {
   emit,
   id,
   include,
+  noChange,
   reduce,
   update,
   updateAndEmit,
