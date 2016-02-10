@@ -38,12 +38,12 @@
     "safety-lens": ">=1.2.0"
   },
   "devDependencies": {
-    "babel-cli": "~6.3.0",
-    "babel-plugin-transform-class-properties": "~6.4.0",
-    "babel-preset-es2015": "~6.3.13",
-    "babel-preset-react": "~6.3.13",
-    "chai": "~3.4.1",
-    "chai-as-promised": "~5.2.0",
+    "babel-cli": "~6.5",
+    "babel-plugin-transform-class-properties": "~6.5",
+    "babel-preset-es2015": "~6.5",
+    "babel-preset-react": "~6.5",
+    "chai": "~3",
+    "chai-as-promised": "~5",
     "chai-dom": "~1.4.0",
     "flow-bin": "~0.21.0",
     "jsdom": "~7.2.2",
