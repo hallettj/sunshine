@@ -2,6 +2,8 @@
 .*/fbjs/.*
 .*/flow-bin/.*
 .*/babel.*
+.*[^e].json
+.*mappingTable.json
 
 [include]
 
