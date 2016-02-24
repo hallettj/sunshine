@@ -36,13 +36,13 @@ class App<State> {
   initialState: State;
   reducers: Reducer<State, any>[];
   includes: Include<State, any>[];
-  inputs: Stream<any>[];
+  inputs: Stream<any,any>[];
 
   constructor(
     initialState: State,
     reducers: Reducers<State> = [],
     includes: Includes<State> = [],
-    inputs: Iterable<Stream<any>> = []
+    inputs: Iterable<Stream<any,any>> = []
   ) {
     this.initialState = initialState
     this.reducers = Array.from(reducers)
@@ -62,7 +62,7 @@ class App<State> {
     return new App(this.initialState, this.reducers, this.includes.concat(includes), this.inputs)
   }
 
-  input(...inputs: Stream<any>[]): App<State> {
+  input(...inputs: Stream<any,any>[]): App<State> {
     return new App(this.initialState, this.reducers, this.includes, this.inputs.concat(inputs))
   }
 
@@ -139,10 +139,10 @@ class GotAsyncResult<State, SubState> {
  * `Property`, and accepts input events via an `emit` method.
  */
 class Session<State> {
-  state: Property<State>;
-  events: Stream<Object>;
+  state: Property<State,void>;
+  events: Stream<Object,any>;
   currentState: State;
-  _emitter: Emitter<Object>;
+  _emitter: Emitter<Object,any>;
   _reducers: Reducer<State,any>[];
   _includes: Include<State,any>[];
 
@@ -150,7 +150,7 @@ class Session<State> {
     initialState: State,
     reducers: Reducer<State, any>[],
     includes: Include<State, any>[],
-    inputs: Stream<any>[]
+    inputs: Stream<any,any>[]
   ) {
     const stream = Kefir.stream(emitter => { this._emitter = emitter })
     const input = Kefir.merge(inputs.concat(stream))

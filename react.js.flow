@@ -4,7 +4,7 @@ import React from 'react'
 import { compose, get } from 'safety-lens'
 import * as Sunshine from './sunshine'
 
-import type { Property, Stream } from 'kefir';
+import type { Stream } from 'kefir';
 import type { Getter } from 'safety-lens'
 
 export {
@@ -27,13 +27,14 @@ type Context<AppState,FocusedState> = {
   _sunshineLens?: Getter<AppState,FocusedState>,
 }
 
-export class Component<DefProps,Props,ComponentState:Object> extends
-                                React.Component<DefProps,Props,ComponentState> {
+export class Component<DefaultProps,Props,ComponentState:Object> extends
+                                React.Component<DefaultProps,Props,ComponentState> {
+  static defaultProps: DefaultProps;
   context:        $Shape<Context<AppStateStandin,AppStateStandin>>;
   state:          ComponentState;
   _app:           ?Sunshine.Session<AppStateStandin>;
   _hasState:      boolean;
-  _changes:       ?Stream<AppStateStandin>;
+  _changes:       ?Stream<AppStateStandin,void>;
   _onStateChange: ?((_: AppStateStandin) => void);
 
   constructor(props: Props, context: any, updater: any) {
@@ -70,14 +71,15 @@ export class Component<DefProps,Props,ComponentState:Object> extends
 
   componentDidMount() {
     if (this._hasState) {
-      this._onStateChange = appState => {
+      const _onStateChange = appState => {
         const componentState = this.getState(get(getLens(this), appState))
         if (componentState) { this.setState(componentState) }
       }
-      var app = this._app
+      this._onStateChange = _onStateChange
+      const app = this._app
       if (app) {
-        var changes = app.state.changes()
-        changes.onValue(this._onStateChange)
+        const changes = app.state.changes()
+        changes.onValue(_onStateChange)
         this._changes = changes
       }
     }

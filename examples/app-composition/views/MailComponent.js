@@ -20,7 +20,7 @@ export default class MailComponent extends Sunshine.Component<{},{},State> {
     this.emit(new Mail.GetMessages(query))
   }
 
-  render(): ReactDOM.Element {
+  render(): React.Element {
     const messages = this.state.messages.map(({ from, body }, idx) => (
       <div className="message" key={idx}>
         <span className="from">{from}</span>
