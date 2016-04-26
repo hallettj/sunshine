@@ -36,7 +36,7 @@
   },
   "dependencies": {
     "flatmap": ">=0.0.3",
-    "kefir": "~3.2",
+    "kefir": "~3.2.2",
     "react": ">=0.14.0",
     "safety-lens": ">=1.2.0"
   },
