@@ -48,7 +48,7 @@
     "chai": "~3",
     "chai-as-promised": "~5",
     "chai-dom": "~1.4.0",
-    "flow-bin": "~0.23.0",
+    "flow-bin": "~0.26.0",
     "jsdom": "~8.3.1",
     "mocha": "~2.3.4",
     "react-addons-test-utils": ">=0.14.0",
